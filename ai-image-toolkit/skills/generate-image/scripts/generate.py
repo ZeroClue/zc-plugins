@@ -11,6 +11,7 @@ from pathlib import Path
 
 import urllib.request
 import urllib.error
+import random
 
 
 def load_env_file(path=None):
@@ -135,21 +136,25 @@ def cmd_generate(args):
         print("Error: RUNPOD_API_KEY environment variable not set", file=sys.stderr)
         sys.exit(1)
 
+    seed = args.seed if args.seed is not None else random.randint(0, 2**32 - 1)
+
+    width = args.width
+    height = args.height
+
     payload = {
         "input": {
             "prompt": args.prompt,
-            "width": args.width,
-            "height": args.height,
+            "width": width,
+            "height": height,
             "steps": args.steps,
+            "seed": seed,
             "negative_prompt": args.negative_prompt,
             "batch_size": args.batch_size,
         }
     }
-    if args.seed is not None:
-        payload["input"]["seed"] = args.seed
 
     print(f"Generating image: \"{args.prompt}\"")
-    print(f"  Size: {args.width}x{args.height}, Steps: {args.steps}")
+    print(f"  Size: {width}x{height}, Steps: {args.steps}, Seed: {seed}")
 
     if args.async_mode:
         result = call_runpod_async(endpoint_id, api_key, payload)
@@ -176,22 +181,23 @@ def cmd_edit(args):
 
     image_b64 = load_image_base64(args.image)
 
+    seed = args.seed if args.seed is not None else random.randint(0, 2**32 - 1)
+
     payload = {
         "input": {
             "prompt": args.prompt,
             "image": image_b64,
             "steps": args.steps,
+            "seed": seed,
             "negative_prompt": args.negative_prompt,
         }
     }
-    if args.seed is not None:
-        payload["input"]["seed"] = args.seed
 
     if args.reference_image:
         payload["input"]["reference_image"] = load_image_base64(args.reference_image)
 
     print(f"Editing image: \"{args.prompt}\"")
-    print(f"  Source: {args.image}, Steps: {args.steps}")
+    print(f"  Source: {args.image}, Steps: {args.steps}, Seed: {seed}")
     if args.reference_image:
         print(f"  Reference: {args.reference_image}")
 
@@ -227,8 +233,8 @@ def main():
     gen = subparsers.add_parser("generate", help="Text-to-image (Qwen 2512)")
     gen.add_argument("prompt", help="Image generation prompt")
     gen.add_argument("--seed", type=int, default=None)
-    gen.add_argument("--width", type=int, default=1328)
-    gen.add_argument("--height", type=int, default=1328)
+    gen.add_argument("--width", type=int, default=None)
+    gen.add_argument("--height", type=int, default=None)
     gen.add_argument("--steps", type=int, default=4)
     gen.add_argument("--negative-prompt", default="")
     gen.add_argument("--batch-size", type=int, default=1)
@@ -249,6 +255,15 @@ def main():
     edit.add_argument("--async", dest="async_mode", action="store_true")
 
     args = parser.parse_args()
+
+    if args.command == "generate":
+        if args.width is not None and args.height is None:
+            args.height = args.width
+        elif args.height is not None and args.width is None:
+            args.width = args.height
+        elif args.width is None and args.height is None:
+            args.width = 1328
+            args.height = 1328
 
     if args.command == "generate":
         result = cmd_generate(args)

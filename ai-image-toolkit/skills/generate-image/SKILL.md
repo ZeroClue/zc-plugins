@@ -37,9 +37,12 @@ Users often include size info naturally — extract dimensions and pass as `--wi
 | "generate a 1024x1024 image of a cat" | `a cat` | `--width 1024 --height 1024` |
 | "make a 1920x1080 landscape" | `a landscape` | `--width 1920 --height 1080` |
 | "2048x2048 neon city" | `neon city` | `--width 2048 --height 2048` |
+| "make it 2K wide" | prompt only | `--width 2048` (height auto-set to 2048) |
 
 Patterns: `WxH`, `W×H`, `W by H`, `W X H`. Numbers between 256 and 4096.
+If only one dimension specified, the other matches it (1:1 aspect ratio).
 If no dimensions specified, omit flags — defaults are 1328x1328.
+A seed is always included in the request — auto-generated if not specified — and printed in the output for reproducibility.
 
 ### Extract other params if mentioned
 
