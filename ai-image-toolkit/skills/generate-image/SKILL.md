@@ -148,8 +148,35 @@ For transient errors (timeout, no images), retry once before reporting failure.
 - Images saved as PNG
 - Script uses only stdlib — no pip install needed
 
+## Multi-image carousels
+
+For projects requiring visual consistency across multiple images (Instagram carousels, presentation slides, brand assets), use the carousel script:
+
+```bash
+python3 skills/generate-image/scripts/carousel.py carousel-spec.md [--output-dir ./output] [--seed N] [--steps N]
+```
+
+The script takes a markdown spec file defining all slides. Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style reference via the edit endpoint. Slides with `asset:` lines get multi-pass treatment — a style pass followed by asset compositing passes.
+
+**Spec format:**
+```markdown
+# Carousel Title
+aspect-ratio: 1:1
+steps: 4
+
+## Slide 1 — Hook
+Prompt text describing the first slide...
+
+## Slide 5 — CTA
+asset: /path/to/logo.png
+Prompt describing the slide, referencing the asset location...
+```
+
+See `examples/carousel-example.md` for a complete worked example.
+
 ## Additional Resources
 
 - **`references/setup.md`** — Step-by-step RunPod setup: account, endpoint deployment, credentials, GPU requirements
 - **`references/endpoints.md`** — Detailed RunPod API schemas, async polling, cold start behavior, ComfyUI workflow node mapping
 - **`examples/generate-examples.md`** — End-to-end usage scenarios for both generate and edit modes
+- **`examples/carousel-example.md`** — Complete carousel spec example with 5 slides and asset compositing
