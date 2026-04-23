@@ -2,13 +2,20 @@
 
 ## Project Overview
 
-Shared Claude Code skills/plugins repo. Skills live in `.claude/skills/<name>/` and can be symlinked into any project's `.claude/skills/` directory for use.
+Open community marketplace for Claude Code plugins. Hosted at `ZeroClue/zc-plugins`.
 
-## Current Skills
+Install the marketplace:
+```
+/plugin marketplace add ZeroClue/zc-plugins
+```
 
-### generate-image
+Each plugin lives in its own directory with a `.claude-plugin/plugin.json` manifest, or in an external GitHub repo referenced from `.claude-plugin/marketplace.json`.
 
-Unified image generation skill supporting two RunPod serverless endpoints:
+## Plugins
+
+### ai-image-toolkit
+
+AI image generation and editing via RunPod serverless Qwen Image endpoints. First plugin in the marketplace.
 
 - **Qwen Image 2512** (`generate` mode) — text-to-image, 4-step Lightning LoRA (~2s/image), up to 4096x4096
 - **Qwen Image Edit 2511** (`edit` mode) — image editing from text instructions, single or dual image input, 4-step Lightning (~2-5s) or 40-step full quality (~15-30s)
@@ -101,11 +108,15 @@ Edit endpoint requires base64-encoded source images. The handler decodes them an
 - RunPod cold starts can cause first-request timeouts — use async mode or retry once
 - ComfyUI custom nodes installed via `comfy-node-install.sh` which wraps `comfy node install --mode=remote`
 
-## Skill Installation
-
-To use a skill from this repo in another project:
+## Installing Plugins
 
 ```bash
-# Symlink the skill directory
-ln -s /path/to/zc-plugins/.claude/skills/generate-image /path/to/target-project/.claude/skills/generate-image
+# Add the marketplace
+/plugin marketplace add ZeroClue/zc-plugins
+
+# Install a plugin
+/plugin install ai-image-toolkit@zc-plugins
+
+# Or test a single plugin locally
+claude --plugin-dir /path/to/zc-plugins/ai-image-toolkit
 ```
