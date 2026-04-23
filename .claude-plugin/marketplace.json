@@ -1,0 +1,23 @@
+{
+  "name": "zc-plugins",
+  "owner": {
+    "name": "ZeroClue"
+  },
+  "metadata": {
+    "description": "Open community Claude Code plugin marketplace"
+  },
+  "plugins": [
+    {
+      "name": "ai-image-toolkit",
+      "source": "./ai-image-toolkit",
+      "description": "AI image generation and editing via RunPod serverless Qwen Image endpoints. Text-to-image and image editing with Lightning speed.",
+      "version": "0.1.0",
+      "author": {
+        "name": "ZeroClue",
+        "url": "https://github.com/ZeroClue"
+      },
+      "keywords": ["image-generation", "ai-art", "runpod", "qwen", "image-editing"],
+      "category": "creative"
+    }
+  ]
+}
