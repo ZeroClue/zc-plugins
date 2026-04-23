@@ -31,7 +31,16 @@ Follow the README in each repo for deployment instructions. Both use the same pa
 
 ## Step 3: Set environment variables
 
-Set these in your shell or in the project's `.env` file:
+The script auto-loads a `.env` file from your project root, so the easiest option is:
+
+```bash
+# Create .env in your project root
+echo 'RUNPOD_2512_ENDPOINT_ID=your-text-to-image-endpoint-id' >> .env
+echo 'RUNPOD_EDIT_ENDPOINT_ID=your-image-edit-endpoint-id' >> .env
+echo 'RUNPOD_API_KEY=your-api-key' >> .env
+```
+
+Or export them in your shell:
 
 ```bash
 export RUNPOD_2512_ENDPOINT_ID="your-text-to-image-endpoint-id"
