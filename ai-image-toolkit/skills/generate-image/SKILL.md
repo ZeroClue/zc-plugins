@@ -30,7 +30,26 @@ Determine whether the user wants to **generate** a new image or **edit** an exis
 
 ### Parse dimensions (generate mode only)
 
-Users often include size info naturally — extract dimensions and pass as `--width` and `--height`. Strip dimensions from the prompt to avoid confusing the model.
+Users often include size info naturally — extract dimensions and pass as `--width` and `--height`, or map natural language to `--aspect-ratio`. Strip dimensions from the prompt to avoid confusing the model.
+
+**Aspect ratio mapping** — prefer `--aspect-ratio` when the user specifies a ratio or orientation:
+
+| User says | Flag |
+|-----------|------|
+| "landscape", "widescreen", "16:9" | `--aspect-ratio 16:9` |
+| "portrait", "vertical", "9:16" | `--aspect-ratio 9:16` |
+| "square", "1:1" | `--aspect-ratio 1:1` |
+
+Supported aspect ratios and their resolutions:
+
+| Ratio | Resolution | Ratio | Resolution |
+|-------|-----------|-------|-----------|
+| 1:1 | 1328x1328 | 4:3 | 1472x1104 |
+| 16:9 | 1664x928 | 3:4 | 1104x1472 |
+| 9:16 | 928x1664 | 3:2 | 1584x1056 |
+| | | 2:3 | 1056x1584 |
+
+**Explicit dimensions** — when the user specifies exact pixels:
 
 | User says | Prompt sent to model | Flags |
 |-----------|---------------------|-------|
@@ -40,8 +59,9 @@ Users often include size info naturally — extract dimensions and pass as `--wi
 | "make it 2K wide" | prompt only | `--width 2048` (height auto-set to 2048) |
 
 Patterns: `WxH`, `W×H`, `W by H`, `W X H`. Numbers between 256 and 4096.
+`--aspect-ratio` takes precedence over `--width`/`--height`.
 If only one dimension specified, the other matches it (1:1 aspect ratio).
-If no dimensions specified, omit flags — defaults are 1328x1328.
+If no dimensions specified, defaults are 1328x1328 (1:1).
 A seed is always included in the request — auto-generated if not specified — and printed in the output for reproducibility.
 
 ### Extract other params if mentioned
@@ -84,6 +104,7 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--aspect-ratio` | 1:1 | Preset aspect ratio (1:1, 16:9, 9:16, 4:3, 3:4, 3:2, 2:3). Overrides --width/--height |
 | `--width` | 1328 | Image width (256-4096) |
 | `--height` | 1328 | Image height (256-4096) |
 | `--batch-size` | 1 | Number of images |

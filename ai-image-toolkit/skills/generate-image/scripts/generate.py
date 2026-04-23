@@ -13,6 +13,16 @@ import urllib.request
 import urllib.error
 import random
 
+ASPECT_RATIOS = {
+    "1:1":  (1328, 1328),
+    "16:9": (1664, 928),
+    "9:16": (928, 1664),
+    "4:3":  (1472, 1104),
+    "3:4":  (1104, 1472),
+    "3:2":  (1584, 1056),
+    "2:3":  (1056, 1584),
+}
+
 
 def load_env_file(path=None):
     """Load KEY=VALUE pairs from a .env file into os.environ. Skips comments and blank lines."""
@@ -235,6 +245,8 @@ def main():
     gen.add_argument("--seed", type=int, default=None)
     gen.add_argument("--width", type=int, default=None)
     gen.add_argument("--height", type=int, default=None)
+    gen.add_argument("--aspect-ratio", default=None, choices=list(ASPECT_RATIOS.keys()),
+                     help="Preset aspect ratio (overrides --width/--height)")
     gen.add_argument("--steps", type=int, default=4)
     gen.add_argument("--negative-prompt", default="")
     gen.add_argument("--batch-size", type=int, default=1)
@@ -257,7 +269,9 @@ def main():
     args = parser.parse_args()
 
     if args.command == "generate":
-        if args.width is not None and args.height is None:
+        if args.aspect_ratio:
+            args.width, args.height = ASPECT_RATIOS[args.aspect_ratio]
+        elif args.width is not None and args.height is None:
             args.height = args.width
         elif args.height is not None and args.width is None:
             args.width = args.height
