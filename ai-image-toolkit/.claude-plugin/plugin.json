@@ -1,0 +1,12 @@
+{
+  "name": "ai-image-toolkit",
+  "version": "0.1.0",
+  "description": "AI image generation and editing via RunPod serverless Qwen Image endpoints. Text-to-image (Qwen 2512) and image editing (Qwen Edit 2511).",
+  "author": {
+    "name": "ZeroClue",
+    "url": "https://github.com/ZeroClue"
+  },
+  "repository": "https://github.com/ZeroClue/zc-plugins",
+  "license": "MIT",
+  "keywords": ["image-generation", "ai-art", "runpod", "qwen", "image-editing"]
+}

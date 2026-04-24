@@ -1,13 +1,27 @@
 ---
 name: generate-image
 description: Generate or edit AI images with full parameter control. Use for explicit image generation or editing with specific settings like seed, dimensions, steps, or output path.
-argument-hint: "[generate|edit] <prompt> [--width W --height H] [--seed N] [--steps N] [--image <path>] [--output-dir <path>]"
+argument-hint: "[generate|edit] <prompt> [flags] | <carousel-spec> [--seed N] [--output-dir <path>]"
 allowed-tools: Bash(*)
 ---
 
 # Generate Image
 
 Generate or edit images via RunPod serverless Qwen Image endpoints with explicit parameters.
+
+## Carousel detection
+
+If the user's input contains `## Slide` (a markdown carousel spec), route to the carousel script:
+
+1. Save the full input text to a temporary file (e.g. `/tmp/carousel-spec-{timestamp}.md`)
+2. Extract any flags the user appended after the spec (e.g. `--seed 42`, `--output-dir ./output`, `--steps 4`, `--async`)
+3. Run:
+   ```bash
+   python3 skills/generate-image/scripts/carousel.py /tmp/carousel-spec-{timestamp}.md [--output-dir <path>] [--seed N] [--steps N] [--async]
+   ```
+4. Report the output directory, number of slides generated, and base seed
+
+If no `## Slide` pattern found, proceed with normal generate/edit parsing below.
 
 ## Usage
 
@@ -45,6 +59,7 @@ The `argument-hint` text may come as a single string. Parse it to determine:
 | `generate a sunset --width 1920 --height 1080` | `generate "a sunset" --width 1920 --height 1080` |
 | `edit remove the background --image photo.png` | `edit "remove the background" --image photo.png` |
 | `a dragon --seed 42 --steps 50 --output-dir /tmp` | `generate "a dragon" --seed 42 --steps 50 --output-dir /tmp` |
+| Carousel spec with `## Slide` headers | Save to temp file, run `carousel.py` |
 
 ## Quick reference
 

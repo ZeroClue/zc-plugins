@@ -1,6 +1,6 @@
 ---
 name: generate-image
-description: This skill should be used when the user asks to "generate an image", "create a picture", "draw", "render", "illustrate", "make AI art", "edit an image", "modify this photo", "change the background", "remove the background", "style transfer", "produce a visual", or wants to create or edit images from text descriptions. Supports text-to-image (Qwen Image 2512) and image editing (Qwen Image Edit 2511) via RunPod serverless endpoints.
+description: This skill should be used when the user asks to "generate an image", "create a picture", "draw", "render", "illustrate", "make AI art", "edit an image", "modify this photo", "change the background", "remove the background", "style transfer", "produce a visual", "create a carousel", "make a slide deck", "generate multiple images with consistent style", or wants to create or edit images from text descriptions. Supports text-to-image (Qwen Image 2512), image editing (Qwen Image Edit 2511), and multi-image carousels via RunPod serverless endpoints.
 ---
 
 # Generate Image
@@ -150,13 +150,27 @@ For transient errors (timeout, no images), retry once before reporting failure.
 
 ## Multi-image carousels
 
-For projects requiring visual consistency across multiple images (Instagram carousels, presentation slides, brand assets), use the carousel script:
+For projects requiring visual consistency across multiple images (Instagram carousels, presentation slides, brand assets), use the carousel workflow. Paste a markdown spec into `/generate-image` — the command auto-detects `## Slide` headers and routes to the carousel script:
+
+```
+/generate-image
+# Carousel Title
+aspect-ratio: 1:1
+
+## Slide 1 — Hook
+Prompt text...
+
+## Slide 2 — Problem
+Prompt text...
+```
+
+Or invoke the script directly:
 
 ```bash
 python3 skills/generate-image/scripts/carousel.py carousel-spec.md [--output-dir ./output] [--seed N] [--steps N]
 ```
 
-The script takes a markdown spec file defining all slides. Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style reference via the edit endpoint. Slides with `asset:` lines get multi-pass treatment — a style pass followed by asset compositing passes.
+Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style reference via the edit endpoint. Slides with `asset:` lines get multi-pass treatment — a style pass followed by asset compositing passes.
 
 **Spec format:**
 ```markdown

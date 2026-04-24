@@ -2,42 +2,39 @@
 
 This plugin uses [RunPod](https://runpod.io?ref=lnnwdl3q) serverless endpoints to run Qwen Image models. You need a RunPod account, two serverless endpoints deployed, and three environment variables set.
 
-## What you need
+## Step 1: Create a RunPod account
 
-- A RunPod account ([sign up here](https://runpod.io?ref=lnnwdl3q))
-- Two serverless endpoints deployed from the worker repos below
-- Your RunPod API key
+If you don't have one yet, [sign up here](https://runpod.io?ref=lnnwdl3q).
 
-## Step 1: Deploy the endpoints
+## Step 2: Deploy the endpoints
 
-Two ComfyUI worker repos power this plugin. Deploy each as a serverless endpoint on RunPod.
+Click each link below to deploy a serverless endpoint. The initial build takes a few minutes.
 
-### Text-to-image (Qwen Image 2512)
+- **Text-to-image:** [Deploy Qwen Image 2512](https://console.runpod.io/hub/ZeroClue/qwen-img-2512) ([source](https://github.com/ZeroClue/qwen-img-2512))
+- **Image editing:** [Deploy Qwen Image Edit 2511](https://console.runpod.io/hub/ZeroClue/qwen-img-edit-2511) ([source](https://github.com/ZeroClue/qwen-img-edit-2511))
 
-- **Repo:** [ZeroClue/qwen-img-2512](https://github.com/ZeroClue/qwen-img-2512)
-- **Deploy on RunPod:** *(link coming soon — will be added once published on Serverless Hub)*
+Wait for both builds to complete before proceeding.
 
-### Image editing (Qwen Image Edit 2511)
-
-- **Repo:** [ZeroClue/qwen-img-edit-2511](https://github.com/ZeroClue/qwen-img-edit-2511)
-- **Deploy on RunPod:** *(link coming soon — will be added once published on Serverless Hub)*
-
-Follow the README in each repo for deployment instructions. Both use the same pattern: fork the repo, create a serverless endpoint on RunPod pointing to it, and wait for the build to complete.
-
-## Step 2: Get your credentials
+## Step 3: Get your credentials
 
 1. **Endpoint IDs**: RunPod dashboard > Serverless > click each endpoint > copy the endpoint ID from the URL or settings
 2. **API key**: RunPod dashboard > Settings > API Keys
 
-## Step 3: Set environment variables
+## Step 4: Set environment variables
 
 The script auto-loads a `.env` file from your project root, so the easiest option is:
 
 ```bash
 # Create .env in your project root
-echo 'RUNPOD_2512_ENDPOINT_ID=your-text-to-image-endpoint-id' >> .env
-echo 'RUNPOD_EDIT_ENDPOINT_ID=your-image-edit-endpoint-id' >> .env
-echo 'RUNPOD_API_KEY=your-api-key' >> .env
+cp ai-image-toolkit/.env.example .env
+```
+
+Then fill in the values:
+
+```
+RUNPOD_2512_ENDPOINT_ID=your-text-to-image-endpoint-id
+RUNPOD_EDIT_ENDPOINT_ID=your-image-edit-endpoint-id
+RUNPOD_API_KEY=your-api-key
 ```
 
 Or export them in your shell:

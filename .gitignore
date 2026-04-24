@@ -1,4 +1,11 @@
 __pycache__/
 *.pyc
+.claude/
 .env
 *.local.md
+.remember/
+docs/superpowers/
+test-carousel.md
+Test_Carousel/
+*.png
+.DS_Store
