@@ -125,13 +125,13 @@ If the script fails, check the error message:
 | `RUNPOD_* not set` | Instruct user to set the env var |
 | `HTTP 401/403` | Invalid API key — check RunPod dashboard |
 | `HTTP 404` | Wrong endpoint ID |
-| `Connection error` | Network/endpoint down — retry |
-| `No images in response` | May be cold start — retry once |
-| `timeout` | Remove `--sync` flag (async is default) |
+| `Connection error` | Network/endpoint down |
+| `No images in response` | Cold start — do NOT retry, the job may still be processing |
+| `timeout` | Do NOT retry — remove `--sync` flag and use default async mode |
 | `image file not found` | Check the file path |
 | `image file too large` | Compress or resize the image first |
 
-For transient errors (timeout, no images), retry once before reporting failure.
+**Do not retry on timeout or "no images" errors.** RunPod serverless jobs continue processing even if the script times out. Retrying creates duplicate jobs and wastes GPU time. Report the error to the user instead.
 
 ## After generation
 

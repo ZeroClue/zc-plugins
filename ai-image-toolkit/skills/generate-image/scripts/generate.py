@@ -66,7 +66,7 @@ def call_runpod(endpoint_id, api_key, payload, timeout=300):
         sys.exit(1)
 
 
-def call_runpod_async(endpoint_id, api_key, payload, timeout=120):
+def call_runpod_async(endpoint_id, api_key, payload, timeout=300):
     """Submit async job and poll until completion."""
     url = f"https://api.runpod.ai/v2/{endpoint_id}/run"
     headers = {
