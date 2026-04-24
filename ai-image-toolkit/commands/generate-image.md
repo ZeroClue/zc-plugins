@@ -14,10 +14,10 @@ Generate or edit images via RunPod serverless Qwen Image endpoints with explicit
 If the user's input contains `## Slide` (a markdown carousel spec), route to the carousel script:
 
 1. Save the full input text to a temporary file (e.g. `/tmp/carousel-spec-{timestamp}.md`)
-2. Extract any flags the user appended after the spec (e.g. `--seed 42`, `--output-dir ./output`, `--steps 4`, `--async`)
+2. Extract any flags the user appended after the spec (e.g. `--seed 42`, `--output-dir ./output`, `--steps 4`, `--sync`)
 3. Run:
    ```bash
-   python3 skills/generate-image/scripts/carousel.py /tmp/carousel-spec-{timestamp}.md [--output-dir <path>] [--seed N] [--steps N] [--async]
+   python3 skills/generate-image/scripts/carousel.py /tmp/carousel-spec-{timestamp}.md [--output-dir <path>] [--seed N] [--steps N] [--sync]
    ```
 4. Report the output directory, number of slides generated, and base seed
 
@@ -75,7 +75,7 @@ The `argument-hint` text may come as a single string. Parse it to determine:
 | `--output-dir` | . | Where to save |
 | `--filename` | auto | Output filename |
 | `--batch-size` | 1 | Number of images (generate only) |
-| `--async` | off | Use async mode for long jobs |
+| `--sync` | off | Use synchronous mode (faster when worker is warm) |
 
 ## After running
 

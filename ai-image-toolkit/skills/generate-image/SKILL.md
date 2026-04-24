@@ -98,7 +98,7 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 | `--negative-prompt` | "" | Negative prompt text |
 | `--output-dir` | . | Output directory |
 | `--filename` | auto | Output filename |
-| `--async` | off | Use async mode (poll for result) |
+| `--sync` | off | Use synchronous mode (faster when worker is warm) |
 
 ### Generate-only flags
 
@@ -127,7 +127,7 @@ If the script fails, check the error message:
 | `HTTP 404` | Wrong endpoint ID |
 | `Connection error` | Network/endpoint down — retry |
 | `No images in response` | May be cold start — retry once |
-| `timeout` | Use `--async` mode |
+| `timeout` | Remove `--sync` flag (async is default) |
 | `image file not found` | Check the file path |
 | `image file too large` | Compress or resize the image first |
 

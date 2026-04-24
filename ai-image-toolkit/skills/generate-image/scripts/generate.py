@@ -166,10 +166,10 @@ def cmd_generate(args):
     print(f"Generating image: \"{args.prompt}\"")
     print(f"  Size: {width}x{height}, Steps: {args.steps}, Seed: {seed}")
 
-    if args.async_mode:
-        result = call_runpod_async(endpoint_id, api_key, payload)
-    else:
+    if args.sync_mode:
         result = call_runpod(endpoint_id, api_key, payload)
+    else:
+        result = call_runpod_async(endpoint_id, api_key, payload)
 
     return result
 
@@ -211,10 +211,10 @@ def cmd_edit(args):
     if args.reference_image:
         print(f"  Reference: {args.reference_image}")
 
-    if args.async_mode:
-        result = call_runpod_async(endpoint_id, api_key, payload)
-    else:
+    if args.sync_mode:
         result = call_runpod(endpoint_id, api_key, payload)
+    else:
+        result = call_runpod_async(endpoint_id, api_key, payload)
 
     return result
 
@@ -252,7 +252,7 @@ def main():
     gen.add_argument("--batch-size", type=int, default=1)
     gen.add_argument("--output-dir", default=".")
     gen.add_argument("--filename", default=None)
-    gen.add_argument("--async", dest="async_mode", action="store_true")
+    gen.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
 
     # Edit subcommand
     edit = subparsers.add_parser("edit", help="Image editing (Qwen Edit 2511)")
@@ -264,7 +264,7 @@ def main():
     edit.add_argument("--negative-prompt", default="")
     edit.add_argument("--output-dir", default=".")
     edit.add_argument("--filename", default=None)
-    edit.add_argument("--async", dest="async_mode", action="store_true")
+    edit.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
 
     args = parser.parse_args()
 

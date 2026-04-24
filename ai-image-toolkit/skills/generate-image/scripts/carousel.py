@@ -84,7 +84,7 @@ def resolve_dimensions(config):
     return (1328, 1328)
 
 
-def generate_slide_1(prompt, width, height, steps, seed, negative_prompt, async_mode):
+def generate_slide_1(prompt, width, height, steps, seed, negative_prompt, sync_mode):
     """Generate the first slide via the 2512 text-to-image endpoint."""
     endpoint_id = os.environ.get("RUNPOD_2512_ENDPOINT_ID")
     api_key = os.environ.get("RUNPOD_API_KEY")
@@ -109,12 +109,12 @@ def generate_slide_1(prompt, width, height, steps, seed, negative_prompt, async_
     }
 
     print(f"  Generating via 2512 endpoint...")
-    if async_mode:
-        return call_runpod_async(endpoint_id, api_key, payload)
-    return call_runpod(endpoint_id, api_key, payload)
+    if sync_mode:
+        return call_runpod(endpoint_id, api_key, payload)
+    return call_runpod_async(endpoint_id, api_key, payload)
 
 
-def edit_slide(prompt, source_path, reference_path, steps, seed, negative_prompt, async_mode):
+def edit_slide(prompt, source_path, reference_path, steps, seed, negative_prompt, sync_mode):
     """Edit an image via the 2511 edit endpoint."""
     endpoint_id = os.environ.get("RUNPOD_EDIT_ENDPOINT_ID")
     api_key = os.environ.get("RUNPOD_API_KEY")
@@ -139,9 +139,9 @@ def edit_slide(prompt, source_path, reference_path, steps, seed, negative_prompt
         payload["input"]["reference_image"] = load_image_base64(reference_path)
 
     print(f"  Editing via 2511 endpoint...")
-    if async_mode:
-        return call_runpod_async(endpoint_id, api_key, payload)
-    return call_runpod(endpoint_id, api_key, payload)
+    if sync_mode:
+        return call_runpod(endpoint_id, api_key, payload)
+    return call_runpod_async(endpoint_id, api_key, payload)
 
 
 def save_result(result, filename, output_dir):
@@ -178,7 +178,7 @@ def main():
     parser.add_argument("--seed", type=int, default=None, help="Base seed (each slide gets base + index)")
     parser.add_argument("--steps", type=int, default=None, help="Override steps from spec")
     parser.add_argument("--negative-prompt", default="", help="Negative prompt for all slides")
-    parser.add_argument("--async", dest="async_mode", action="store_true", help="Use async mode")
+    parser.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
     args = parser.parse_args()
 
     title, config, slides = parse_spec(args.spec)
@@ -214,13 +214,13 @@ def main():
         if slide_num == 1:
             result = generate_slide_1(
                 prompt, width, height, steps, seed,
-                args.negative_prompt, args.async_mode,
+                args.negative_prompt, args.sync_mode,
             )
             path = save_result(result, filename, output_dir)
         elif not assets:
             result = edit_slide(
                 prompt, slide_1_path, slide_1_path, steps, seed,
-                args.negative_prompt, args.async_mode,
+                args.negative_prompt, args.sync_mode,
             )
             path = save_result(result, filename, output_dir)
         else:
@@ -228,7 +228,7 @@ def main():
             style_prompt = prompt
             result = edit_slide(
                 style_prompt, slide_1_path, slide_1_path, steps, seed,
-                args.negative_prompt, args.async_mode,
+                args.negative_prompt, args.sync_mode,
             )
             path = save_result(result, filename, output_dir)
 
@@ -241,7 +241,7 @@ def main():
                 temp_filename = f"slide_{slide_num:02d}_{make_slug(heading)}_pass{j+2}.png"
                 result = edit_slide(
                     asset_prompt, path, asset_path, steps, asset_seed,
-                    args.negative_prompt, args.async_mode,
+                    args.negative_prompt, args.sync_mode,
                 )
                 new_path = save_result(result, temp_filename, output_dir)
                 if new_path:
