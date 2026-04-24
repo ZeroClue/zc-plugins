@@ -11,17 +11,20 @@ Install the marketplace:
 
 Each plugin lives in its own directory with a `.claude-plugin/plugin.json` manifest, or in an external GitHub repo referenced from `.claude-plugin/marketplace.json`.
 
+## Repo Structure
+
+```
+.claude-plugin/marketplace.json   # Marketplace registry
+ai-image-toolkit/                # Plugin directory
+  .claude-plugin/plugin.json     # Plugin manifest
+  commands/                      # Slash commands
+  skills/generate-image/         # Skill with scripts, references, examples
+CONTRIBUTING.md                  # Contribution guidelines
+```
+
 ## Plugins
 
-### ai-image-toolkit
-
-AI image generation and editing via RunPod serverless Qwen Image endpoints.
-
-- **Qwen Image 2512** (`generate` mode) — text-to-image, 4-step Lightning LoRA (~2s/image), up to 4096x4096
-- **Qwen Image Edit 2511** (`edit` mode) — image editing from text instructions, 4-step Lightning or 40-step full quality
-- **Multi-image carousels** — visually consistent slide decks from markdown specs
-
-Worker repos: [ZeroClue/qwen-img-2512](https://github.com/ZeroClue/qwen-img-2512), [ZeroClue/qwen-img-edit-2511](https://github.com/ZeroClue/qwen-img-edit-2511)
+See `.claude-plugin/marketplace.json` for the current plugin registry.
 
 ## Environment Variables
 
@@ -32,6 +35,22 @@ Worker repos: [ZeroClue/qwen-img-2512](https://github.com/ZeroClue/qwen-img-2512
 | `RUNPOD_API_KEY` | RunPod API key (shared across both endpoints) |
 
 Set these in `.env` at the project root (gitignored) or export them in the shell. Scripts load via `Path.cwd() / ".env"`.
+
+## Dev Commands
+
+```bash
+# Test generate (from repo root, requires .env)
+python3 ai-image-toolkit/skills/generate-image/scripts/generate.py generate "a cat"
+
+# Test edit
+python3 ai-image-toolkit/skills/generate-image/scripts/generate.py edit "make it darker" --image photo.png
+
+# Test carousel
+python3 ai-image-toolkit/skills/generate-image/scripts/carousel.py spec.md
+
+# Test plugin locally
+claude --plugin-dir ./ai-image-toolkit
+```
 
 ## API Patterns
 
