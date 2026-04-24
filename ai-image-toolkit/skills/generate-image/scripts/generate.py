@@ -66,6 +66,21 @@ def call_runpod(endpoint_id, api_key, payload, timeout=300):
         sys.exit(1)
 
 
+def check_endpoint_health(endpoint_id, api_key):
+    """Check endpoint health. Returns True if workers are available (warm)."""
+    url = f"https://api.runpod.ai/v2/{endpoint_id}/health"
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {api_key}"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            workers = data.get("workers", {})
+            running = workers.get("running", 0) if isinstance(workers, dict) else 0
+            idle = workers.get("idle", 0) if isinstance(workers, dict) else 0
+            return running > 0 or idle > 0
+    except Exception:
+        return None
+
+
 def call_runpod_async(endpoint_id, api_key, payload, timeout=300):
     """Submit async job and poll until completion."""
     url = f"https://api.runpod.ai/v2/{endpoint_id}/run"
@@ -166,6 +181,10 @@ def cmd_generate(args):
     print(f"Generating image: \"{args.prompt}\"")
     print(f"  Size: {width}x{height}, Steps: {args.steps}, Seed: {seed}")
 
+    warm = check_endpoint_health(endpoint_id, api_key)
+    if warm is False:
+        print(f"  Note: endpoint is cold, expecting cold start delay")
+
     if args.sync_mode:
         result = call_runpod(endpoint_id, api_key, payload)
     else:
@@ -210,6 +229,10 @@ def cmd_edit(args):
     print(f"  Source: {args.image}, Steps: {args.steps}, Seed: {seed}")
     if args.reference_image:
         print(f"  Reference: {args.reference_image}")
+
+    warm = check_endpoint_health(endpoint_id, api_key)
+    if warm is False:
+        print(f"  Note: endpoint is cold, expecting cold start delay")
 
     if args.sync_mode:
         result = call_runpod(endpoint_id, api_key, payload)

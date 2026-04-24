@@ -13,6 +13,7 @@ from generate import (
     ASPECT_RATIOS,
     call_runpod,
     call_runpod_async,
+    check_endpoint_health,
     extract_images,
     load_env_file,
     load_image_base64,
@@ -195,6 +196,18 @@ def main():
 
     print(f"Carousel: {title}")
     print(f"  Slides: {len(slides)}, Size: {width}x{height}, Steps: {steps}, Base seed: {base_seed}")
+
+    api_key = os.environ.get("RUNPOD_API_KEY")
+    gen_endpoint = os.environ.get("RUNPOD_2512_ENDPOINT_ID")
+    edit_endpoint = os.environ.get("RUNPOD_EDIT_ENDPOINT_ID")
+    if gen_endpoint and api_key:
+        warm = check_endpoint_health(gen_endpoint, api_key)
+        if warm is False:
+            print(f"  Note: generate endpoint is cold, expecting cold start delay")
+    if edit_endpoint and api_key:
+        warm = check_endpoint_health(edit_endpoint, api_key)
+        if warm is False:
+            print(f"  Note: edit endpoint is cold, expecting cold start delay")
     print()
 
     saved_paths = []
