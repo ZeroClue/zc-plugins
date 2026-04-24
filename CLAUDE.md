@@ -31,7 +31,7 @@ Worker repos: [ZeroClue/qwen-img-2512](https://github.com/ZeroClue/qwen-img-2512
 | `RUNPOD_EDIT_ENDPOINT_ID` | RunPod serverless endpoint ID for image editing |
 | `RUNPOD_API_KEY` | RunPod API key (shared across both endpoints) |
 
-Set these in the project's `.env` file (gitignored) or export them in the shell.
+Set these in `.env` at the project root (gitignored) or export them in the shell. Scripts load via `Path.cwd() / ".env"`.
 
 ## API Patterns
 
@@ -45,10 +45,16 @@ GET  https://api.runpod.ai/v2/{endpoint_id}/status/{id} # async poll
 
 Response: `{"status": "COMPLETED", "output": {"images": [{"data": "base64..."}]}}`
 
-## Known Issues
+## RunPod Behavior
 
-- RunPod cold starts can cause first-request timeouts — use async mode or retry once
+- Scripts default to async (run + poll). `--sync` for warm workers only
+- Cold starts are normal — health check: `GET /v2/{endpoint_id}/health`
+- Never retry on timeout — jobs continue on RunPod; retrying creates duplicates
+
+## Gotchas
+
 - Edit endpoint has no width/height — output inherits source image dimensions
+- Marketplace version bumps must update both `plugin.json` and `marketplace.json`
 
 ## Installing Plugins
 
