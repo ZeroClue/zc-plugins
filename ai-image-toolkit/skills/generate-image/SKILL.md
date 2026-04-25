@@ -290,6 +290,7 @@ See `examples/carousel-example.md` for a complete worked example.
 
 ## Additional Resources
 
+- **`references/qwen-image-prompt-guide.md`** — Official Qwen Image prompt engineering guide: text rendering rules, optimizer system prompt, edit task templates, layout examples, weighted attention syntax
 - **`references/setup.md`** — Step-by-step RunPod setup: account, endpoint deployment, credentials, GPU requirements
 - **`references/endpoints.md`** — Detailed RunPod API schemas, async polling, cold start behavior, ComfyUI workflow node mapping
 - **`examples/generate-examples.md`** — End-to-end usage scenarios for both generate and edit modes
