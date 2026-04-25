@@ -149,6 +149,24 @@ def load_image_base64(path):
     return base64.b64encode(p.read_bytes()).decode("utf-8")
 
 
+def _log_prompt(output_dir, original, expanded, seed=None, mode="generate", source=None):
+    """Append expanded prompt to a log file for auditing."""
+    log_path = Path(output_dir) / "_prompts.jsonl"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "mode": mode,
+        "seed": seed,
+        "original_prompt": original,
+        "expanded_prompt": expanded,
+    }
+    if source:
+        entry["source_image"] = source
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    print(f"  Prompt logged to {log_path}", file=sys.stderr)
+
+
 def cmd_generate(args, brand=None):
     """Handle text-to-image generation via 2512 endpoint."""
     endpoint_id = os.environ.get("RUNPOD_2512_ENDPOINT_ID")
@@ -171,6 +189,7 @@ def cmd_generate(args, brand=None):
         sys.path.insert(0, str(Path(__file__).parent))
         from optimize import optimize_prompt
         prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model, max_words=args.max_words)
+        _log_prompt(args.output_dir, args.prompt, prompt, seed=seed, mode="generate")
 
     payload = {
         "input": {
@@ -225,6 +244,7 @@ def cmd_edit(args, brand=None):
         sys.path.insert(0, str(Path(__file__).parent))
         from optimize import optimize_prompt
         prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model, max_words=args.max_words)
+        _log_prompt(args.output_dir, args.prompt, prompt, seed=seed, mode="edit", source=args.image)
 
     payload = {
         "input": {

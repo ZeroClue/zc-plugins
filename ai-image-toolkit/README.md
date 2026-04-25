@@ -77,6 +77,13 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.6.0 (2026-04-25)
+
+- **Command file prompt expansion** — `/generate-image` slash command now uses Agent tool for prompt expansion (was only in SKILL.md natural language path). Both activation paths are now consistent.
+- **Split template contrast modes** — `contrast:` directive on split slides injects visual treatment instructions (`before-after`, `good-bad`, `old-new`, `problem-solution`, `light-dark`). Each side gets card containers with rounded corners.
+- **Prompt logging** — Expanded prompts written to `_prompts.jsonl` in output directory when `--optimize` is active, for auditing and iteration.
+- **MAGIC_SUFFIX fix** — All template functions now include "Ultra HD, 4K, cinematic composition" directly, with double-suffix protection in the optimizer fallback.
+
 ### v0.5.0 (2026-04-25)
 
 - **Native prompt expansion** — Claude Code handles prompt expansion via Agent tool (model: haiku) instead of Python subprocess. No SDK dependency, no CLI subprocess — works for all subscribers. `--optimize` remains as CLI fallback.

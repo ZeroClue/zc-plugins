@@ -232,6 +232,7 @@ Look for `.image-brand.json` in CWD, project root, or the plugin directory. When
 - Steps locked to 4 for Lightning (sweet spot), up to 50 for generate full quality, 40 for edit full quality
 - Images saved as PNG
 - Script uses only stdlib — no pip install needed
+- When `--optimize` is active, expanded prompts are logged to `_prompts.jsonl` in the output directory for auditing
 
 ## Multi-image carousels
 
@@ -305,6 +306,7 @@ accent: "#FF4500"
 
 ## Slide 3 — Before vs After
 type: split
+contrast: before-after
 left: Broken mobile form
 right: Clean tappable button
 
@@ -318,7 +320,9 @@ action_text: Free website audit
 url: example.com/audit
 ```
 
-**Built-in templates:** `stat-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`. Templates auto-expand into full prompts with brand config colors, fonts, and layout.
+**Built-in templates:** `stat-hook`, `statement-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`. Templates auto-expand into full prompts with brand config colors, fonts, and layout.
+
+**Split template contrast modes:** `before-after`, `good-bad`, `old-new`, `problem-solution`, `light-dark`. Each mode injects visual treatment instructions (e.g., dimmed/faded vs sharp/vibrant) to give the model concrete contrast cues. If no `contrast` is specified, the template uses a neutral side-by-side layout.
 
 **Carousel prompt expansion:**
 

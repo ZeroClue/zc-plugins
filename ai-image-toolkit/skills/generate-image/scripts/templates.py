@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Built-in slide type templates for carousel generation."""
 
+MAGIC_SUFFIX = "Ultra HD, 4K, cinematic composition"
+
 
 def _brand_style(brand):
     """Extract brand style string from config."""
@@ -46,7 +48,7 @@ def stat_hook(heading, number, text="", brand=None, **kwargs):
         f"No other text or decorations.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
-        f"High contrast, minimal layout."
+        f"High contrast, minimal layout. {MAGIC_SUFFIX}"
     )
 
 
@@ -59,7 +61,7 @@ def statement_hook(heading, text="", brand=None, **kwargs):
         f"Optional: thin gradient accent line (2px) below the text.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
-        f"Stark, high contrast, bold typography carries the message."
+        f"Stark, high contrast, bold typography carries the message. {MAGIC_SUFFIX}"
     )
 
 
@@ -77,7 +79,7 @@ def checklist(heading, items, icon="checkmark", brand=None, **kwargs):
         f"text in body font beside it.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
-        f"Even spacing between rows, left-aligned text, clear numbered layout."
+        f"Even spacing between rows, left-aligned text, clear numbered layout. {MAGIC_SUFFIX}"
     )
 
 
@@ -95,7 +97,7 @@ def comparison(heading, columns, brand=None, **kwargs):
         f"Column headers centered within each card. Vertical divider line between columns.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
-        f"Balanced composition, card-style containers."
+        f"Balanced composition, card-style containers. {MAGIC_SUFFIX}"
     )
 
 
@@ -110,21 +112,51 @@ def flow(heading, steps, brand=None, **kwargs):
         f"Cards evenly spaced across canvas width.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
-        f"Clean directional flow, rounded cards, connecting arrows."
+        f"Clean directional flow, rounded cards, connecting arrows. {MAGIC_SUFFIX}"
     )
 
 
-def split(heading, left="", right="", brand=None, **kwargs):
+CONTRAST_MODES = {
+    "before-after": (
+        "Left side: dimmed, desaturated colors, slightly faded or blurred treatment, "
+        "conveying 'before' or 'broken'. Right side: sharp, clean, vibrant saturated colors, "
+        "conveying 'after' or 'correct'."
+    ),
+    "good-bad": (
+        "Left side: clean, bright, well-organized, positive visual treatment. "
+        "Right side: cluttered, dark, disorganized, negative visual treatment."
+    ),
+    "old-new": (
+        "Left side: dated, worn, muted tones, legacy feel. "
+        "Right side: modern, fresh, bright colors, contemporary design."
+    ),
+    "problem-solution": (
+        "Left side: stressed, chaotic, red-tinted or dark tones, conveying a problem. "
+        "Right side: calm, organized, accent-colored or bright tones, conveying the solution."
+    ),
+    "light-dark": (
+        "Left side: bright, light background, airy treatment. "
+        "Right side: dark, moody background, dramatic treatment."
+    ),
+}
+
+
+def split(heading, left="", right="", contrast="", brand=None, **kwargs):
+    contrast_desc = CONTRAST_MODES.get(contrast, "")
+    contrast_section = f"\n{contrast_desc}\n" if contrast_desc else ""
     return (
         f"Split comparison infographic slide. {_canvas_spec(brand)}\n"
         f"Title: \"{heading}\" in bold heading font, top of canvas.\n"
-        f"Two halves divided vertically at center. Left side: \"{left}\". "
-        f"Right side: \"{right}\".\n"
-        f"Each half centered within its region. Optional label above each half.\n"
-        f"Vertical divider line or gap between halves.\n"
+        f"Two halves divided vertically at center, each inside a card container "
+        f"with rounded corners (8px radius) and subtle border. "
+        f"Left card: \"{left}\". Right card: \"{right}\".\n"
+        f"{contrast_section}"
+        f"Each card centered within its half-region with 16px internal padding. "
+        f"Optional label above each card.\n"
+        f"Vertical divider line or 24px gap between cards.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
-        f"Clear visual contrast between the two sides."
+        f"Clear visual contrast between the two sides. {MAGIC_SUFFIX}"
     )
 
 
@@ -137,7 +169,7 @@ def cta(heading, action_text="", url="", brand=None, **kwargs):
         f"Optional gradient accent bar above the action text.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
-        f"Single focal point, prominent button-style text, minimal design."
+        f"Single focal point, prominent button-style text, minimal design. {MAGIC_SUFFIX}"
     )
 
 
@@ -166,7 +198,7 @@ def expand_template(slide_data, brand=None):
         "accent": slide_data.get("accent", ""),
     }
     for key in ("items", "columns", "steps", "number", "text", "left", "right",
-                "action_text", "url"):
+                "action_text", "url", "contrast"):
         if key in slide_data:
             kwargs[key] = slide_data[key]
 

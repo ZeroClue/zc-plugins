@@ -20,6 +20,7 @@ from generate import (
     load_env_file,
     load_image_base64,
     save_image,
+    _log_prompt,
 )
 
 
@@ -56,7 +57,8 @@ def parse_spec(spec_path):
             current_slide = {"heading": stripped[3:].strip(), "prompt": "", "assets": [],
                              "type": "", "items": [], "columns": [], "steps": [],
                              "number": "", "text": "", "left": "", "right": "",
-                             "action_text": "", "url": "", "accent": "", "icon": ""}
+                             "action_text": "", "url": "", "accent": "", "icon": "",
+                             "contrast": ""}
             in_items = False
             continue
 
@@ -124,6 +126,9 @@ def parse_spec(spec_path):
                 continue
             elif key == "action_text" or key == "action":
                 current_slide["action_text"] = value
+                continue
+            elif key == "contrast":
+                current_slide["contrast"] = value
                 continue
             elif key == "url":
                 current_slide["url"] = value
@@ -382,6 +387,22 @@ def main():
                                 max_words=args.max_words) if p else p
                 for p in prompts
             ]
+        # Log all expanded prompts
+        log_path = Path(output_dir) / "_prompts.jsonl"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        for i, (orig, exp) in enumerate(zip(slides, prompts)):
+            entry = {
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "slide": i + 1,
+                "heading": slides[i]["heading"],
+                "original_prompt": slides[i].get("prompt", ""),
+                "expanded_prompt": exp,
+            }
+            if slides[i].get("type"):
+                entry["template_type"] = slides[i]["type"]
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        print(f"  Prompts logged to {log_path}", file=sys.stderr)
 
     for i, slide in enumerate(slides):
         slide_num = i + 1

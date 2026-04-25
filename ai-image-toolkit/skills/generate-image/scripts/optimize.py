@@ -142,11 +142,14 @@ def _expand_via_template(prompt, brand=None):
     prompt_lower = prompt.lower()
     is_text_layout = any(kw in prompt_lower for kw in text_keywords)
 
+    # Avoid double-suffixing if prompt already ends with it (e.g. from template expansion)
+    suffix = "" if prompt.rstrip().endswith(MAGIC_SUFFIX) else f". {MAGIC_SUFFIX}"
+
     if not is_text_layout:
         result = prompt
         if brand and brand.data:
             result = brand.apply_to_prompt(prompt)
-        return f"{result}. {MAGIC_SUFFIX}"
+        return f"{result}{suffix}"
 
     parts = [prompt]
     if brand and brand.data:
@@ -155,7 +158,7 @@ def _expand_via_template(prompt, brand=None):
             parts.append(f"Canvas: {brand.canvas_size}")
     else:
         parts.append("Clean modern layout, centered composition, clear hierarchy, sans-serif font, bold headings")
-    return ". ".join(p for p in parts if p) + f". {MAGIC_SUFFIX}"
+    return ". ".join(p for p in parts if p) + suffix
 
 
 def optimize_prompt(prompt, brand=None, model="haiku", max_words=500):
