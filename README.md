@@ -24,6 +24,7 @@ Open community marketplace for Claude Code plugins.
 
 ### ai-image-toolkit
 
+- **0.7.1** (2025-04-25): Parameters documentation — full flag reference + carousel spec directives
 - **0.7.0** (2025-04-25): Root cause fix for optimizer shrinking prompts (checklist collision + system prompt framing + batch delimiters), spec writing tips
 - **0.6.1** (2025-04-25): Optimizer shrink guard — rejects expanded prompts shorter than 50% of input
 - **0.6.0** (2025-04-25): Command file uses Agent tool for expansion, split template contrast modes, prompt logging (`_prompts.jsonl`), MAGIC_SUFFIX fix in templates

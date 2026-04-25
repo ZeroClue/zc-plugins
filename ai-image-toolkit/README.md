@@ -141,6 +141,10 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.7.1 (2026-04-25)
+
+- **Parameters documentation** — Full flag reference tables for generate, edit, and carousel modes, plus carousel spec directives with template compatibility.
+
 ### v0.7.0 (2026-04-25)
 
 - **Root cause fix: optimizer shrinking prompts** — Three fixes: (1) Checklist items use `- ` instead of `1.` to prevent collision with batch numbering, (2) System prompts refactored from "expand short prompt" to "preserve ALL detail, add specificity", (3) Batch input uses `[PROMPT N]` markers instead of plain numbered lines, with matching output parser.
