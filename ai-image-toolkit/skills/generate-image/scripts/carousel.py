@@ -2,10 +2,12 @@
 """Generate multi-slide carousels with visual consistency via RunPod Qwen Image endpoints."""
 
 import argparse
+import json
 import os
 import random
 import re
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -22,7 +24,16 @@ from generate import (
 
 
 def parse_spec(spec_path):
-    """Parse a carousel markdown spec into structured data."""
+    """Parse a carousel markdown spec into structured data.
+
+    Supports extended syntax for typed slides:
+      type: checklist
+      items:
+        - Item one
+        - Item two
+      accent: "#FF4500"
+      icon: X
+    """
     text = Path(spec_path).read_text(encoding="utf-8")
     lines = text.splitlines()
 
@@ -30,6 +41,7 @@ def parse_spec(spec_path):
     config = {}
     slides = []
     current_slide = None
+    in_items = False
 
     for line in lines:
         stripped = line.strip()
@@ -41,7 +53,11 @@ def parse_spec(spec_path):
         if stripped.startswith("## "):
             if current_slide:
                 slides.append(current_slide)
-            current_slide = {"heading": stripped[3:].strip(), "prompt": "", "assets": []}
+            current_slide = {"heading": stripped[3:].strip(), "prompt": "", "assets": [],
+                             "type": "", "items": [], "columns": [], "steps": [],
+                             "number": "", "text": "", "left": "", "right": "",
+                             "action_text": "", "url": "", "accent": "", "icon": ""}
+            in_items = False
             continue
 
         if current_slide is None:
@@ -50,11 +66,68 @@ def parse_spec(spec_path):
                 config[key.strip()] = value.strip()
             continue
 
+        # Handle items: list block
+        if in_items:
+            if stripped.startswith("- "):
+                item_text = stripped[2:].strip()
+                current_slide["items"].append(item_text)
+                continue
+            elif stripped.startswith("* "):
+                item_text = stripped[2:].strip()
+                current_slide["items"].append(item_text)
+                continue
+            else:
+                in_items = False
+
         if stripped.lower().startswith("asset:"):
             asset_path = stripped[6:].strip()
             if asset_path:
                 current_slide["assets"].append(asset_path)
             continue
+
+        # Typed slide directives
+        if ":" in stripped and not stripped.startswith("#"):
+            key, _, value = stripped.partition(":")
+            key = key.strip().lower()
+            value = value.strip()
+            if key == "type":
+                current_slide["type"] = value
+                continue
+            elif key == "items":
+                in_items = True
+                if value:
+                    current_slide["items"].append(value)
+                continue
+            elif key == "icon":
+                current_slide["icon"] = value
+                continue
+            elif key == "accent":
+                current_slide["accent"] = value
+                continue
+            elif key == "columns":
+                current_slide["columns"] = [c.strip() for c in value.split("|")]
+                continue
+            elif key == "steps":
+                current_slide["steps"] = [s.strip() for s in value.replace("→", "->").split("->")]
+                continue
+            elif key == "number":
+                current_slide["number"] = value
+                continue
+            elif key == "left":
+                current_slide["left"] = value
+                continue
+            elif key == "right":
+                current_slide["right"] = value
+                continue
+            elif key == "text":
+                current_slide["text"] = value
+                continue
+            elif key == "action_text" or key == "action":
+                current_slide["action_text"] = value
+                continue
+            elif key == "url":
+                current_slide["url"] = value
+                continue
 
         if stripped and current_slide is not None:
             if current_slide["prompt"]:
@@ -151,18 +224,58 @@ def save_result(result, filename, output_dir):
     if status == "FAILED":
         error = result.get("error", "Unknown error")
         print(f"  FAILED: {error}", file=sys.stderr)
+        print(f"  Raw result: {json.dumps(result, indent=2)[:500]}", file=sys.stderr)
+        return None
+
+    if status in ("IN_QUEUE", "IN_PROGRESS"):
+        job_id = result.get("id", "unknown")
+        print(f"  Job {job_id} still {status} — runsync may have timed out", file=sys.stderr)
+        print(f"  Raw result: {json.dumps(result, indent=2)[:500]}", file=sys.stderr)
         return None
 
     images, output = extract_images(result)
     if not images:
-        print(f"  No images in response", file=sys.stderr)
+        print(f"  No images in response. Raw output: {json.dumps(output, indent=2)[:500]}", file=sys.stderr)
         return None
 
     data = images[0].get("data", "") if isinstance(images[0], dict) else ""
     if not data:
+        print(f"  Image entry has no data. Raw entry: {json.dumps(images[0], indent=2)[:300]}", file=sys.stderr)
         return None
 
     return save_image(data, filename, output_dir)
+
+
+def _edit_with_fallback(prompt, source_path, reference_path, steps, seed,
+                        negative_prompt, sync_mode, max_retries, no_fallback,
+                        width, height, filename, output_dir):
+    """Try edit endpoint with retry + backoff, fall back to generate on failure."""
+    for attempt in range(max_retries):
+        result = edit_slide(
+            prompt, source_path, reference_path, steps, seed,
+            negative_prompt, sync_mode,
+        )
+        path = save_result(result, filename, output_dir)
+        if path:
+            return path
+        if attempt < max_retries - 1:
+            delay = 5 * (attempt + 1)
+            print(f"  Retry {attempt + 1}/{max_retries} in {delay}s...", file=sys.stderr)
+            time.sleep(delay)
+
+    if no_fallback:
+        print(f"  Edit failed after {max_retries} attempts, fallback disabled", file=sys.stderr)
+        return None
+
+    print(f"  Edit failed after {max_retries} attempts — falling back to 2512 generate", file=sys.stderr)
+    result = generate_slide_1(
+        prompt, width, height, steps, seed,
+        negative_prompt, sync_mode,
+    )
+    path = save_result(result, filename, output_dir)
+    if path:
+        print(f"  Fallback succeeded (reduced consistency)", file=sys.stderr)
+    return path
 
 
 def make_slug(text):
@@ -180,6 +293,16 @@ def main():
     parser.add_argument("--steps", type=int, default=None, help="Override steps from spec")
     parser.add_argument("--negative-prompt", default="", help="Negative prompt for all slides")
     parser.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
+    parser.add_argument("--generate-all", dest="generate_all", action="store_true",
+                        help="Use generate (2512) endpoint for all slides instead of edit-based consistency")
+    parser.add_argument("--edit-retries", type=int, default=3, help="Retries for edit endpoint before fallback (default: 3)")
+    parser.add_argument("--no-fallback", dest="no_fallback", action="store_true",
+                        help="Disable automatic fallback to generate on edit failure")
+    parser.add_argument("--optimize", action="store_true",
+                        help="Expand prompts via LLM for better results")
+    parser.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"],
+                        help="Model for prompt expansion (default: haiku)")
+    parser.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
     args = parser.parse_args()
 
     title, config, slides = parse_spec(args.spec)
@@ -188,9 +311,28 @@ def main():
         sys.exit(1)
 
     width, height = resolve_dimensions(config)
-    steps = args.steps or int(config.get("steps", 4))
+    try:
+        steps = args.steps or int(config.get("steps", 4))
+    except (ValueError, TypeError):
+        steps = args.steps or 4
     base_seed = args.seed if args.seed is not None else random.randint(0, 2**32 - 1)
     output_dir = args.output_dir or make_slug(title)
+
+    # Load brand config, templates, optimizer
+    brand = None
+    if args.optimize or args.brand_config:
+        from brand import BrandConfig
+        from optimize import optimize_prompt
+        from templates import expand_template
+        brand = BrandConfig(args.brand_config)
+        if brand.data:
+            print(f"  Brand config loaded: {len(brand.data)} properties")
+            dims = brand.canvas_dimensions()
+            if dims and "width" not in config and "aspect-ratio" not in config:
+                width, height = dims
+                print(f"  Canvas from brand: {width}x{height}")
+    elif any(s.get("type") for s in slides):
+        from templates import expand_template
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -224,26 +366,38 @@ def main():
         print(f"Slide {slide_num}: {heading}")
         print(f"  Seed: {seed}, Assets: {len(assets)}")
 
-        if slide_num == 1:
+        # Expand typed slides via templates
+        if slide.get("type"):
+            prompt = expand_template(slide, brand=brand)
+            if not prompt:
+                print(f"  WARNING: empty prompt for typed slide {slide_num}", file=sys.stderr)
+            else:
+                print(f"  Template: {slide['type']} → {len(prompt)} char prompt")
+
+        # Optimize prompt if requested
+        if args.optimize and prompt:
+            prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model)
+
+        if slide_num == 1 or args.generate_all:
             result = generate_slide_1(
                 prompt, width, height, steps, seed,
                 args.negative_prompt, args.sync_mode,
             )
             path = save_result(result, filename, output_dir)
         elif not assets:
-            result = edit_slide(
+            path = _edit_with_fallback(
                 prompt, slide_1_path, slide_1_path, steps, seed,
-                args.negative_prompt, args.sync_mode,
+                args.negative_prompt, args.sync_mode, args.edit_retries,
+                args.no_fallback, width, height, filename, output_dir,
             )
-            path = save_result(result, filename, output_dir)
         else:
             # Style pass — use slide 1 as reference, prompt describes everything except assets
             style_prompt = prompt
-            result = edit_slide(
+            path = _edit_with_fallback(
                 style_prompt, slide_1_path, slide_1_path, steps, seed,
-                args.negative_prompt, args.sync_mode,
+                args.negative_prompt, args.sync_mode, args.edit_retries,
+                args.no_fallback, width, height, filename, output_dir,
             )
-            path = save_result(result, filename, output_dir)
 
             # Asset passes — composite each asset onto the result
             for j, asset_path in enumerate(assets):
@@ -252,11 +406,11 @@ def main():
                 asset_seed = seed + 1000 + j
                 asset_prompt = f"Add the visual element from the reference image to the appropriate location in this image. Maintain the existing style and composition."
                 temp_filename = f"slide_{slide_num:02d}_{make_slug(heading)}_pass{j+2}.png"
-                result = edit_slide(
+                new_path = _edit_with_fallback(
                     asset_prompt, path, asset_path, steps, asset_seed,
-                    args.negative_prompt, args.sync_mode,
+                    args.negative_prompt, args.sync_mode, args.edit_retries,
+                    args.no_fallback, width, height, temp_filename, output_dir,
                 )
-                new_path = save_result(result, temp_filename, output_dir)
                 if new_path:
                     # Remove intermediate pass file, keep final
                     if j < len(assets) - 1:

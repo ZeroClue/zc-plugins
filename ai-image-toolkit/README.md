@@ -11,6 +11,10 @@ AI image generation and editing for Claude Code, powered by Qwen Image models on
 - **Text-to-image** — Generate images from text prompts (Qwen Image 2512, 4-step Lightning, ~2s/image, up to 4096x4096)
 - **Image editing** — Edit existing images with text instructions (Qwen Image Edit 2511, single or dual image input)
 - **Multi-image carousels** — Generate visually consistent slide decks from markdown specs (auto-detected in `/generate-image`)
+- **Prompt optimizer** — Expand short prompts into detailed image specs via `claude` CLI (`--optimize`, configurable model)
+- **Brand config** — Define brand colors, fonts, and style in `.image-brand.json`, auto-injected into every prompt
+- **Slide templates** — Built-in templates for common carousel patterns (`stat-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`)
+- **Edit fallback** — Automatic retry with backoff on edit failures, falls back to generate endpoint
 
 ## Prerequisites
 
@@ -70,6 +74,23 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 |---|---|---|---|
 | Qwen Image 2512 | Text-to-image | 4 (Lightning) | 50 |
 | Qwen Image Edit 2511 | Image editing | 4 (Lightning) | 40 |
+
+## What's New
+
+### v0.3.0 (2026-04-25)
+
+- **Prompt optimizer** — `--optimize` flag expands short prompts into detailed image generation specs via the `claude` CLI. Model configurable with `--optimizer-model` (haiku/sonnet/opus, default haiku). Falls back to template-based expansion when CLI unavailable.
+- **Brand config** — `.image-brand.json` defines colors, fonts, canvas size, and style notes. Auto-injected into every prompt when `--optimize` or `--brand-config` is used.
+- **Slide type templates** — Carousel specs support `type:` directive with 6 built-in templates: `stat-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`.
+- **Edit retry + fallback** — Edit endpoint calls retry 3x with backoff (5s/10s/15s) before falling back to the generate endpoint. Configurable with `--edit-retries` and `--no-fallback`.
+- **`--generate-all` flag** — Use the 2512 generate endpoint for all carousel slides, bypassing edit-based consistency entirely.
+- **Debug logging** — `save_result()` now logs raw API responses on all failure paths (FAILED, IN_QUEUE/IN_PROGRESS timeout, empty images, missing data).
+
+### v0.2.0 (2026-04-24)
+
+- Health check endpoint (`GET /v2/{endpoint_id}/health`)
+- Default to async mode to handle cold starts gracefully
+- Prevent retry storms on cold starts
 
 ## License
 

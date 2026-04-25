@@ -149,7 +149,7 @@ def load_image_base64(path):
     return base64.b64encode(p.read_bytes()).decode("utf-8")
 
 
-def cmd_generate(args):
+def cmd_generate(args, brand=None):
     """Handle text-to-image generation via 2512 endpoint."""
     endpoint_id = os.environ.get("RUNPOD_2512_ENDPOINT_ID")
     api_key = os.environ.get("RUNPOD_API_KEY")
@@ -166,9 +166,15 @@ def cmd_generate(args):
     width = args.width
     height = args.height
 
+    prompt = args.prompt
+    if args.optimize:
+        sys.path.insert(0, str(Path(__file__).parent))
+        from optimize import optimize_prompt
+        prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model)
+
     payload = {
         "input": {
-            "prompt": args.prompt,
+            "prompt": prompt,
             "width": width,
             "height": height,
             "steps": args.steps,
@@ -179,6 +185,8 @@ def cmd_generate(args):
     }
 
     print(f"Generating image: \"{args.prompt}\"")
+    if prompt != args.prompt:
+        print(f"  Optimized prompt ({len(prompt)} chars)")
     print(f"  Size: {width}x{height}, Steps: {args.steps}, Seed: {seed}")
 
     warm = check_endpoint_health(endpoint_id, api_key)
@@ -193,7 +201,7 @@ def cmd_generate(args):
     return result
 
 
-def cmd_edit(args):
+def cmd_edit(args, brand=None):
     """Handle image editing via edit-2511 endpoint."""
     endpoint_id = os.environ.get("RUNPOD_EDIT_ENDPOINT_ID")
     api_key = os.environ.get("RUNPOD_API_KEY")
@@ -212,9 +220,15 @@ def cmd_edit(args):
 
     seed = args.seed if args.seed is not None else random.randint(0, 2**32 - 1)
 
+    prompt = args.prompt
+    if args.optimize:
+        sys.path.insert(0, str(Path(__file__).parent))
+        from optimize import optimize_prompt
+        prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model)
+
     payload = {
         "input": {
-            "prompt": args.prompt,
+            "prompt": prompt,
             "image": image_b64,
             "steps": args.steps,
             "seed": seed,
@@ -226,6 +240,8 @@ def cmd_edit(args):
         payload["input"]["reference_image"] = load_image_base64(args.reference_image)
 
     print(f"Editing image: \"{args.prompt}\"")
+    if prompt != args.prompt:
+        print(f"  Optimized prompt ({len(prompt)} chars)")
     print(f"  Source: {args.image}, Steps: {args.steps}, Seed: {seed}")
     if args.reference_image:
         print(f"  Reference: {args.reference_image}")
@@ -276,6 +292,9 @@ def main():
     gen.add_argument("--output-dir", default=".")
     gen.add_argument("--filename", default=None)
     gen.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
+    gen.add_argument("--optimize", action="store_true", help="Expand prompt via LLM for better results")
+    gen.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"], help="Model for prompt expansion (default: haiku)")
+    gen.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
 
     # Edit subcommand
     edit = subparsers.add_parser("edit", help="Image editing (Qwen Edit 2511)")
@@ -288,6 +307,9 @@ def main():
     edit.add_argument("--output-dir", default=".")
     edit.add_argument("--filename", default=None)
     edit.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
+    edit.add_argument("--optimize", action="store_true", help="Expand prompt via LLM for better results")
+    edit.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"], help="Model for prompt expansion (default: haiku)")
+    edit.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
 
     args = parser.parse_args()
 
@@ -302,10 +324,18 @@ def main():
             args.width = 1328
             args.height = 1328
 
+    brand = None
+    if args.optimize or args.brand_config:
+        sys.path.insert(0, str(Path(__file__).parent))
+        from brand import BrandConfig
+        brand = BrandConfig(args.brand_config)
+        if brand.data:
+            print(f"  Brand config loaded: {len(brand.data)} properties")
+
     if args.command == "generate":
-        result = cmd_generate(args)
+        result = cmd_generate(args, brand=brand)
     else:
-        result = cmd_edit(args)
+        result = cmd_edit(args, brand=brand)
 
     status = result.get("status")
     if status == "FAILED":

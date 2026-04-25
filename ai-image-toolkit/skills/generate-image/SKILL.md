@@ -99,6 +99,9 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 | `--output-dir` | . | Output directory |
 | `--filename` | auto | Output filename |
 | `--sync` | off | Use synchronous mode (faster when worker is warm) |
+| `--optimize` | off | Expand prompt via LLM for more detailed image specs |
+| `--optimizer-model` | haiku | Model for prompt expansion: haiku, sonnet, opus |
+| `--brand-config` | auto | Path to `.image-brand.json` (auto-searches CWD if not specified) |
 
 ### Generate-only flags
 
@@ -132,6 +135,52 @@ If the script fails, check the error message:
 | `image file too large` | Compress or resize the image first |
 
 **Do not retry on timeout or "no images" errors.** RunPod serverless jobs continue processing even if the script times out. Retrying creates duplicate jobs and wastes GPU time. Report the error to the user instead.
+
+## Prompt optimization
+
+When the user provides a short or vague prompt and wants better results, use `--optimize`. The optimizer expands the prompt into a detailed image generation spec with positioning, colors, fonts, and layout details.
+
+**How it works:**
+- Calls the `claude` CLI (uses your existing auth session) to expand the prompt
+- Model is configurable via `--optimizer-model` (default: haiku for speed)
+- If a brand config file exists, brand defaults are injected automatically
+- Falls back to template-based expansion if `claude` CLI isn't available
+
+**When to suggest it:**
+- User gives a short prompt (<20 words) for a complex layout
+- User describes an infographic, card, or text-heavy image
+- User wants consistent brand styling across multiple images
+
+```bash
+# Short prompt → detailed spec
+python3 skills/generate-image/scripts/generate.py generate "stat 53%, heading 'conversion rate'" --optimize
+
+# With brand config for consistent styling
+python3 skills/generate-image/scripts/generate.py generate "a dark infographic about SEO" --optimize --brand-config .image-brand.json
+
+# Use a stronger model for complex expansions
+python3 skills/generate-image/scripts/generate.py generate "complex dashboard layout" --optimize --optimizer-model sonnet
+```
+
+## Brand config
+
+Create a `.image-brand.json` file in your project root or CWD to define brand defaults. The optimizer injects these into every prompt automatically.
+
+```json
+{
+  "background": "#050506",
+  "accent": "#32CD32",
+  "text_primary": "#FFFFFF",
+  "text_secondary": "#999999",
+  "font_family": "Inter",
+  "font_weight_heading": "Bold",
+  "font_weight_body": "Regular",
+  "canvas_size": "1080x1080",
+  "style_notes": "Minimal, dark, professional infographic. No photos, no illustrations."
+}
+```
+
+The file is auto-discovered from CWD or the plugin directory. Use `--brand-config <path>` to specify a custom location.
 
 ## After generation
 
@@ -172,7 +221,22 @@ python3 skills/generate-image/scripts/carousel.py carousel-spec.md [--output-dir
 
 Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style reference via the edit endpoint. Slides with `asset:` lines get multi-pass treatment — a style pass followed by asset compositing passes.
 
-**Spec format:**
+**Carousel flags:**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--output-dir` | auto | Output directory (default: `./<title-slug>`) |
+| `--seed` | random | Base seed (each slide gets base + index) |
+| `--steps` | 4 | Override steps from spec |
+| `--sync` | off | Synchronous mode (warm workers only) |
+| `--generate-all` | off | Use generate endpoint for all slides (no edit consistency) |
+| `--edit-retries` | 3 | Retries per slide before fallback |
+| `--no-fallback` | off | Disable automatic edit→generate fallback |
+| `--optimize` | off | Expand prompts via LLM |
+| `--optimizer-model` | haiku | Model for prompt expansion |
+| `--brand-config` | auto | Path to `.image-brand.json` |
+
+**Spec format (full prompts):**
 ```markdown
 # Carousel Title
 aspect-ratio: 1:1
@@ -185,6 +249,42 @@ Prompt text describing the first slide...
 asset: /path/to/logo.png
 Prompt describing the slide, referencing the asset location...
 ```
+
+**Spec format (typed templates):**
+```markdown
+# Carousel Title
+aspect-ratio: 1:1
+
+## Slide 1 — The Problem
+type: stat-hook
+number: 53%
+text: of websites fail to convert visitors
+
+## Slide 2 — What's Broken
+type: checklist
+icon: X
+items:
+  - Title tags missing or generic
+  - Meta descriptions empty
+  - Images at 5MB each
+accent: "#FF4500"
+
+## Slide 3 — Before vs After
+type: split
+left: Broken mobile form
+right: Clean tappable button
+
+## Slide 4 — The Fix
+type: flow
+steps: Audit → Prioritize → Implement → Measure
+
+## Slide 5 — Get Started
+type: cta
+action_text: Free website audit
+url: example.com/audit
+```
+
+**Built-in templates:** `stat-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`. Templates auto-expand into full prompts with brand config colors, fonts, and layout.
 
 See `examples/carousel-example.md` for a complete worked example.
 
