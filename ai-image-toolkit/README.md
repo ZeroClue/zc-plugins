@@ -152,8 +152,6 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
-### v0.7.3 (2026-04-25)
-
 ### v0.8.0 (2026-04-25)
 
 - **Endpoint v1.8.0 parameters** — New flags `--cfg`, `--shift`, `--sampler`, `--scheduler`, `--lora` for fine-tuning ComfyUI workflow parameters. Exposed in generate, edit, and carousel modes.
@@ -161,6 +159,10 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 - **Step quality tiers** — Documented guidance: 4=prototyping, 8=text-heavy, 50/40=production.
 
 ### v0.7.3 (2026-04-25)
+
+- **`--generate-all` with shared style prefix** — Text-heavy carousels (infographics, checklists, stats) now bypass the edit endpoint entirely, generating all slides via 2512 with a shared style prefix derived from brand config. The edit endpoint corrupts text due to full re-synthesis; this avoids the issue while maintaining visual consistency (see #2).
+- **`--shared-seed`** — Use the same seed for all carousel slides instead of base + index. Works with both normal and `--generate-all` pipelines for consistent random state across the carousel.
+- **`extract_style_prefix()`** — New template function builds a style block from brand config (colors, typography, style notes) that gets prepended to slides 2-N in generate-all mode.
 
 ### v0.7.2 (2026-04-25)
 

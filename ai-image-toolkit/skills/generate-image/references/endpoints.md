@@ -128,4 +128,4 @@ The script's simplified input maps to a ComfyUI workflow with these key node IDs
 - `"170:169"` — KSampler seed
 - `"170:168"` — switch boolean
 
-The switch pattern: `PrimitiveBoolean` node feeds three `Switch` nodes that select model/LoRA, steps, and CFG based on whether steps <= 4 (Lightning) or higher (full quality).
+The switch pattern: `PrimitiveBoolean` node feeds `Switch` nodes that select model/LoRA, steps, and CFG. As of v1.8.0, LoRA is auto-selected from steps: ≤4 → 4-step Lightning (CFG=1), 5-8 → 8-step Lightning (CFG=1), >8 → base model (no LoRA, CFG=4). Override with `lora`, `cfg`, `shift`, `sampler`, `scheduler` params.

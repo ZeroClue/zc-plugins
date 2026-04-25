@@ -130,7 +130,7 @@ The Lightning LoRA trades text rendering quality for speed. Endpoints v1.8.0+ au
 |-------|------|-------|----------|
 | 4 | 4-step Lightning (LoRA, CFG=1) | ~2s | Prototyping, visual-only images, quick iterations |
 | 5-8 | 8-step Lightning (LoRA, CFG=1) | ~4-8s | Text-heavy content, carousels, infographics |
-| 9+ (generate) / 9+ (edit) | Full quality (no LoRA, CFG=4) | ~15-30s | Maximum text accuracy, final production output |
+| 9+ (e.g. 50 for generate, 40 for edit) | Full quality (no LoRA, CFG=4) | ~15-30s | Maximum text accuracy, final production output |
 
 For **text-heavy carousels** (`--generate-all`), recommend `--steps 8` as the default — significantly better text rendering than 4-step with minimal speed cost. Override LoRA selection with `--lora 4step`, `--lora 8step`, or `--lora none`.
 
