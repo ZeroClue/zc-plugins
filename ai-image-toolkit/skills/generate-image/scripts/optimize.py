@@ -161,12 +161,23 @@ def _expand_via_template(prompt, brand=None):
     return ". ".join(p for p in parts if p) + suffix
 
 
+def _validate_expansion(original, expanded):
+    """Guard against the optimizer shrinking structured content."""
+    if not expanded:
+        return original
+    if len(expanded) < len(original) * 0.5:
+        print(f"  WARNING: optimized prompt shrunk ({len(expanded)} vs {len(original)} chars), using original", file=sys.stderr)
+        return original
+    return expanded
+
+
 def optimize_prompt(prompt, brand=None, model="haiku", max_words=500):
     """Expand a short prompt into a detailed image generation spec."""
     # SDK path: fast, but requires ANTHROPIC_API_KEY
     if _is_sdk_available():
         expanded = _expand_via_sdk(prompt, model, brand, max_words)
         if expanded:
+            expanded = _validate_expansion(prompt, expanded)
             print(f"  Prompt optimized via SDK ({model}): {len(prompt)} → {len(expanded)} chars", file=sys.stderr)
             return expanded
 
@@ -174,6 +185,7 @@ def optimize_prompt(prompt, brand=None, model="haiku", max_words=500):
     if _is_claude_available():
         expanded = _expand_via_claude(prompt, model, brand, max_words)
         if expanded:
+            expanded = _validate_expansion(prompt, expanded)
             print(f"  Prompt optimized via claude CLI ({model}): {len(prompt)} → {len(expanded)} chars", file=sys.stderr)
             return expanded
 
@@ -207,6 +219,7 @@ def batch_optimize(prompts, brand=None, model="haiku", max_words=500):
     if _is_sdk_available():
         expanded = _batch_via_sdk(numbered, system, model)
         if expanded and len(expanded) == len(prompts):
+            expanded = [_validate_expansion(p, e) for p, e in zip(prompts, expanded)]
             print(f"  Batch optimized {len(prompts)} prompts via SDK ({model})", file=sys.stderr)
             return expanded
         if expanded:
