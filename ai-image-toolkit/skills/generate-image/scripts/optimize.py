@@ -123,7 +123,6 @@ def _expand_via_claude(prompt, model, brand=None, max_words=500):
     if not shutil.which("claude"):
         return None
     system = _build_system_prompt(brand, max_words)
-    import subprocess
     try:
         result = subprocess.run(
             ["claude", "-p", prompt, "--system-prompt", system, "--model", model],
@@ -201,15 +200,17 @@ def batch_optimize(prompts, brand=None, model="haiku", max_words=500):
 
     numbered = "\n".join(f"{i+1}. {p}" for i, p in enumerate(prompts))
 
-    # Try SDK first (only if API key available)
+    # Try SDK batch (only if API key available)
     if _is_sdk_available():
         expanded = _batch_via_sdk(numbered, system, model)
-    if expanded:
-        print(f"  Batch optimized {len(prompts)} prompts via SDK ({model})", file=sys.stderr)
-        return expanded
+        if expanded and len(expanded) == len(prompts):
+            print(f"  Batch optimized {len(prompts)} prompts via SDK ({model})", file=sys.stderr)
+            return expanded
+        if expanded:
+            print(f"  Batch SDK returned {len(expanded)} results, expected {len(prompts)} — falling back", file=sys.stderr)
 
-    # Fall back to individual optimization
-    print("  Batch SDK failed, optimizing individually", file=sys.stderr)
+    # Fall back to individual optimization (uses SDK/CLI/template per prompt)
+    print("  Optimizing prompts individually", file=sys.stderr)
     return [optimize_prompt(p, brand=brand, model=model, max_words=max_words) for p in prompts]
 
 
@@ -236,18 +237,18 @@ def _batch_via_sdk(numbered_prompts, system, model):
 
 def _parse_batch_response(text):
     """Parse numbered response lines back into a list."""
+    import re
     results = []
     for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
-        # Match "1: ..." or "1. ..."
-        if len(line) > 2 and line[0].isdigit():
-            sep = line[1] if line[1] in ":.)" else None
-            if sep:
-                results.append(line[2:].strip())
-                continue
-        # Continuation of previous entry or unnumbered line
+        # Match "1: ...", "1. ...", "10) ..." etc.
+        m = re.match(r'^(\d+)\s*[:.)]\s*(.*)', line)
+        if m:
+            results.append(m.group(2).strip())
+            continue
+        # Continuation of previous entry
         if results:
             results[-1] += " " + line
     return results if results else None
