@@ -141,6 +141,11 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.7.2 (2026-04-25)
+
+- **Fix: heading directive ignored in carousel specs** — `heading:` now overrides the `## Slide N — Description` markdown header. Previously fell through into the prompt body as noise (closes #1).
+- **Fix: horizontal rules and blockquotes in specs** — `---`, `> text` lines are now skipped instead of being appended to the prompt.
+
 ### v0.7.1 (2026-04-25)
 
 - **Parameters documentation** — Full flag reference tables for generate, edit, and carousel modes, plus carousel spec directives with template compatibility.

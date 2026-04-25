@@ -95,6 +95,9 @@ def parse_spec(spec_path):
             if key == "type":
                 current_slide["type"] = value
                 continue
+            elif key == "heading":
+                current_slide["heading"] = value
+                continue
             elif key == "items":
                 in_items = True
                 if value:
@@ -133,6 +136,10 @@ def parse_spec(spec_path):
             elif key == "url":
                 current_slide["url"] = value
                 continue
+
+        # Skip horizontal rules and blockquotes
+        if stripped in ("---", "***", "___") or stripped.startswith(">"):
+            continue
 
         if stripped and current_slide is not None:
             if current_slide["prompt"]:
