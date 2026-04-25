@@ -11,7 +11,7 @@
       "name": "ai-image-toolkit",
       "source": "./ai-image-toolkit",
       "description": "AI image generation and editing via RunPod serverless Qwen Image endpoints. Text-to-image and image editing with Lightning speed.",
-      "version": "0.7.2",
+      "version": "0.7.3",
       "author": {
         "name": "ZeroClue",
         "url": "https://github.com/ZeroClue"

@@ -411,6 +411,15 @@ def main():
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         print(f"  Prompts logged to {log_path}", file=sys.stderr)
 
+    # Pass 3: inject shared style prefix for generate-all mode
+    if args.generate_all and len(prompts) > 1:
+        from templates import extract_style_prefix
+        style_prefix = extract_style_prefix(brand)
+        for i in range(1, len(prompts)):
+            if style_prefix not in prompts[i]:
+                prompts[i] = f"{style_prefix} {prompts[i]}"
+        print(f"  Shared style prefix injected ({len(style_prefix)} chars)", file=sys.stderr)
+
     for i, slide in enumerate(slides):
         slide_num = i + 1
         seed = base_seed + i

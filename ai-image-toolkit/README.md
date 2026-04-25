@@ -141,6 +141,11 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.7.3 (2026-04-25)
+
+- **`--generate-all` with shared style prefix** — Text-heavy carousels (infographics, checklists, stats) now bypass the edit endpoint entirely, generating all slides via 2512 with a shared style prefix derived from brand config. The edit endpoint corrupts text due to full re-synthesis; this avoids the issue while maintaining visual consistency (see #2).
+- **`extract_style_prefix()`** — New template function builds a style block from brand config (colors, typography, style notes) that gets prepended to slides 2-N in generate-all mode.
+
 ### v0.7.2 (2026-04-25)
 
 - **Fix: heading directive ignored in carousel specs** — `heading:` now overrides the `## Slide N — Description` markdown header. Previously fell through into the prompt body as noise (closes #1).

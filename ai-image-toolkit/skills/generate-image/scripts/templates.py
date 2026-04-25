@@ -173,6 +173,36 @@ def cta(heading, action_text="", url="", brand=None, **kwargs):
     )
 
 
+def extract_style_prefix(brand):
+    """Build a shared style prefix for generate-all consistency.
+
+    Returns a style block derived from brand config that can be prepended
+    to every slide's prompt for visual consistency across independent generations.
+    """
+    parts = ["Consistent visual style across all slides:"]
+    if brand and brand.data:
+        if brand.style_notes:
+            parts.append(brand.style_notes)
+        colors = []
+        if brand.background:
+            colors.append(f"background {brand.background}")
+        if brand.accent:
+            colors.append(f"accent {brand.accent}")
+        if brand.text_primary:
+            colors.append(f"primary text {brand.text_primary}")
+        if brand.text_secondary:
+            colors.append(f"secondary text {brand.text_secondary}")
+        if colors:
+            parts.append("Colors: " + ", ".join(colors))
+        if brand.font_family:
+            weight_h = f" {brand.font_weight_heading}" if brand.font_weight_heading else " Bold"
+            weight_b = f" {brand.font_weight_body}" if brand.font_weight_body else " Regular"
+            parts.append(f"Typography: {brand.font_family}, headings {brand.font_family}{weight_h}, body {brand.font_family}{weight_b}")
+    else:
+        parts.append("Clean modern design, centered layout, sans-serif font, dark background, white text.")
+    return ". ".join(parts) + "."
+
+
 TEMPLATES = {
     "stat-hook": stat_hook,
     "statement-hook": statement_hook,

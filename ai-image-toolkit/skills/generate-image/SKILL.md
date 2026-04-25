@@ -260,6 +260,8 @@ python3 skills/generate-image/scripts/carousel.py carousel-spec.md [--output-dir
 
 Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style reference via the edit endpoint. Slides with `asset:` lines get multi-pass treatment — a style pass followed by asset compositing passes.
 
+**When to use `--generate-all`:** The edit endpoint (2511) does full re-synthesis which corrupts text — garbled characters, dropped items, overridden icons. For text-heavy carousels (infographics, checklists, stats), use `--generate-all` which generates all slides via 2512 with a shared style prefix for visual consistency. The edit pipeline works well for visual-only slides (photos, illustrations) but is unreliable for text content.
+
 **Carousel flags:**
 
 | Flag | Default | Description |
@@ -268,7 +270,7 @@ Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style
 | `--seed` | random | Base seed (each slide gets base + index) |
 | `--steps` | 4 | Override steps from spec |
 | `--sync` | off | Synchronous mode (warm workers only) |
-| `--generate-all` | off | Use generate endpoint for all slides (no edit consistency) |
+| `--generate-all` | off | Use generate endpoint for all slides with shared style prefix for consistency. Recommended for text-heavy carousels — the edit endpoint corrupts text. |
 | `--edit-retries` | 3 | Retries per slide before fallback |
 | `--no-fallback` | off | Disable automatic edit→generate fallback |
 | `--brand-config` | auto | Path to `.image-brand.json` |

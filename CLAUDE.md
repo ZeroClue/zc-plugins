@@ -4,27 +4,28 @@
 
 Open community marketplace for Claude Code plugins. Hosted at `ZeroClue/zc-plugins`.
 
-Install the marketplace:
-```
-/plugin marketplace add ZeroClue/zc-plugins
-```
-
 Each plugin lives in its own directory with a `.claude-plugin/plugin.json` manifest, or in an external GitHub repo referenced from `.claude-plugin/marketplace.json`.
 
 ## Repo Structure
 
 ```
-.claude-plugin/marketplace.json   # Marketplace registry
-ai-image-toolkit/                # Plugin directory
-  .claude-plugin/plugin.json     # Plugin manifest
-  commands/                      # Slash commands
-  skills/generate-image/         # Skill with scripts, references, examples
-CONTRIBUTING.md                  # Contribution guidelines
+.claude-plugin/marketplace.json          # Marketplace registry
+ai-image-toolkit/                        # Plugin directory
+  .claude-plugin/plugin.json             # Plugin manifest
+  commands/generate-image.md             # Slash command handler
+  skills/generate-image/
+    SKILL.md                             # Skill definition (Agent tool expansion rules)
+    scripts/
+      generate.py                        # Generate/edit entry point
+      carousel.py                        # Multi-slide carousel generator
+      optimize.py                        # Prompt optimizer (SDK/CLI/template fallback)
+      templates.py                       # Slide type templates (7 built-in)
+      brand.py                           # .image-brand.json loader
+    references/                          # Qwen Image docs, RunPod API, setup guide
+    examples/                            # Carousel spec examples
+CONTRIBUTING.md                          # Contribution guidelines
+.github/ISSUE_TEMPLATE/                  # Bug report & feature request templates
 ```
-
-## Plugins
-
-See `.claude-plugin/marketplace.json` for the current plugin registry.
 
 ## Environment Variables
 
@@ -39,6 +40,9 @@ Set these in `.env` at the project root (gitignored) or export them in the shell
 ## Dev Commands
 
 ```bash
+# Syntax check all scripts (fast, no network)
+python3 -m py_compile ai-image-toolkit/skills/generate-image/scripts/*.py && echo OK
+
 # Test generate (from repo root, requires .env)
 python3 ai-image-toolkit/skills/generate-image/scripts/generate.py generate "a cat"
 
@@ -50,19 +54,15 @@ python3 ai-image-toolkit/skills/generate-image/scripts/carousel.py spec.md
 
 # Test plugin locally
 claude --plugin-dir ./ai-image-toolkit
+
+# Install from marketplace
+# /plugin install ai-image-toolkit@zc-plugins
 ```
 
-## API Patterns
+## GitHub Issues
 
-Both endpoints use RunPod's serverless API:
-
-```
-POST https://api.runpod.ai/v2/{endpoint_id}/runsync   # sync
-POST https://api.runpod.ai/v2/{endpoint_id}/run        # async submit
-GET  https://api.runpod.ai/v2/{endpoint_id}/status/{id} # async poll
-```
-
-Response: `{"status": "COMPLETED", "output": {"images": [{"data": "base64..."}]}}`
+Labels: `bug`, `enhancement`, `documentation`, `good first issue`, `ai-image-toolkit`
+Use `gh issue` CLI. Reference issue numbers in fix commits.
 
 ## RunPod Behavior
 
@@ -74,16 +74,26 @@ Response: `{"status": "COMPLETED", "output": {"images": [{"data": "base64..."}]}
 
 - Edit endpoint has no width/height — output inherits source image dimensions
 - Marketplace version bumps must update both `plugin.json` and `marketplace.json`
+- `.image-brand.json` auto-discovery order: `--brand-config` path > CWD > project root > plugin root
+- New carousel spec directives must be added to `parse_spec()` handler in carousel.py — unhandled directives silently pollute the prompt
+- `---`, `***`, `___` and `> ` lines in specs are skipped, not parsed
 
-## Installing Plugins
+## Plugin Architecture
 
-```bash
-# Add the marketplace
-/plugin marketplace add ZeroClue/zc-plugins
+Skills (SKILL.md) and commands (commands/*.md) are separate activation paths:
+- Natural language ("generate an image...") → SKILL.md
+- Slash command (`/generate-image`) → commands/generate-image.md
+Changes to SKILL.md do NOT propagate to the command file — update both.
+Command files need `allowed-tools: Agent` for sub-agent expansion to work.
 
-# Install a plugin
-/plugin install ai-image-toolkit@zc-plugins
+## Version Bumps
 
-# Or test locally
-claude --plugin-dir /path/to/zc-plugins/ai-image-toolkit
-```
+Every version bump must update BOTH `plugin.json` and `marketplace.json`.
+The plugin version appears in 4 places: both JSON files + both READMEs.
+
+## Optimizer Gotchas
+
+Three-tier fallback: SDK (ANTHROPIC_API_KEY) → CLI (`claude` binary) → template.
+Templates produce rich prompts — optimizer must "preserve ALL detail, never summarize."
+Checklist items use `- ` not `N. ` to avoid collision with batch numbering.
+Batch input uses `[PROMPT N]` delimiters, not plain numbered lines.
