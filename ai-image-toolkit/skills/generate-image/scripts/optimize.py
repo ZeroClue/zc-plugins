@@ -8,7 +8,9 @@ import sys
 
 MAGIC_SUFFIX = "Ultra HD, 4K, cinematic composition"
 
-OPTIMIZER_SYSTEM_PROMPT = """You are an image generation prompt engineer for the Qwen Image model. Expand the user's short prompt into a detailed prompt optimized for Qwen Image's capabilities.
+OPTIMIZER_SYSTEM_PROMPT = """You are an image generation prompt engineer for the Qwen Image model. Enhance the user's prompt for optimal image generation with Qwen Image.
+
+IMPORTANT: Preserve ALL existing detail from the input. Only ADD specificity where the prompt is vague. Never summarize, condense, or remove existing content.
 
 Qwen Image strengths: exceptional text rendering, complex multi-element layouts, infographic-style compositions, realistic photography.
 
@@ -20,13 +22,15 @@ Rules:
 - Do NOT add any text the user did not explicitly request. Qwen renders text accurately — hallucinated text will appear in the image.
 - Do NOT use negation words. Instead of "no text", just don't mention text. Instead of "no watermark", omit it entirely.
 - You may use weighted attention syntax: (element:1.5) to emphasize, (element:0.8) to de-emphasize.
-- Output ONLY the expanded prompt — no explanations, no markdown, no prefix.
+- Output ONLY the enhanced prompt — no explanations, no markdown, no prefix.
 - {word_cap_instruction}
 - Be specific with colors (hex codes), sizes (pixels relative to canvas), and positions (top-left, center, etc.).
 - Always end the prompt with: Ultra HD, 4K, cinematic composition
 """
 
-OPTIMIZER_SYSTEM_PROMPT_WITH_BRAND = """You are an image generation prompt engineer for the Qwen Image model. Expand the user's short prompt into a detailed prompt optimized for Qwen Image's capabilities.
+OPTIMIZER_SYSTEM_PROMPT_WITH_BRAND = """You are an image generation prompt engineer for the Qwen Image model. Enhance the user's prompt for optimal image generation with Qwen Image.
+
+IMPORTANT: Preserve ALL existing detail from the input. Only ADD specificity where the prompt is vague. Never summarize, condense, or remove existing content.
 
 Brand config (apply these defaults to every prompt):
 {brand_context}
@@ -38,16 +42,18 @@ Rules:
 - Photo/illustration prompts: add style, lighting, composition, mood details. If no style specified, default to realistic photography. Apply brand style notes if relevant.
 - For edit instructions: keep descriptions direct and specific. Preserve the original image's core intention, only enhance clarity and visual feasibility.
 - Enclose all text content in double quotes. Specify position and font style for each text element. Never alter or translate the user's text.
-- Do NOT add any text the user did not explicitly request. Qwen renders text accurately — hallucinated text will appear in the image.
+- Do NOT add any text the user did not explicitly requested. Qwen renders text accurately — hallucinated text will appear in the image.
 - Do NOT use negation words. Instead of "no text", just don't mention text. Instead of "no watermark", omit it entirely.
 - You may use weighted attention syntax: (element:1.5) to emphasize, (element:0.8) to de-emphasize.
-- Output ONLY the expanded prompt — no explanations, no markdown, no prefix.
+- Output ONLY the enhanced prompt — no explanations, no markdown, no prefix.
 - {word_cap_instruction}
 - Be specific with colors (hex codes), sizes (pixels relative to canvas), and positions (top-left, center, etc.).
 - Always end the prompt with: Ultra HD, 4K, cinematic composition
 """
 
-BATCH_SYSTEM_PROMPT = """You are an image generation prompt engineer for the Qwen Image model. The user will provide {count} numbered prompts. Expand each into a detailed prompt following these rules:
+BATCH_SYSTEM_PROMPT = """You are an image generation prompt engineer for the Qwen Image model. The user will provide {count} prompts. Enhance each prompt for optimal image generation.
+
+IMPORTANT: Preserve ALL existing detail from every input. Only ADD specificity where a prompt is vague. Never summarize, condense, or remove existing content.
 
 Qwen Image strengths: exceptional text rendering, complex multi-element layouts, infographic-style compositions, realistic photography.
 
@@ -60,10 +66,13 @@ Rules per prompt:
 - Be specific with colors (hex codes), sizes, and positions.
 - End each expanded prompt with: Ultra HD, 4K, cinematic composition
 
-Output format — return each expanded prompt on a separate line, prefixed with its number and a colon:
-1: <expanded prompt 1>
-2: <expanded prompt 2>
-...
+Output format — wrap each expanded prompt in markers, one per block:
+[PROMPT 1]
+<expanded prompt 1>
+[/PROMPT 1]
+[PROMPT 2]
+<expanded prompt 2>
+[/PROMPT 2]
 
 {brand_section}
 """
@@ -213,7 +222,10 @@ def batch_optimize(prompts, brand=None, model="haiku", max_words=500):
         brand_section=brand_section,
     )
 
-    numbered = "\n".join(f"{i+1}. {p}" for i, p in enumerate(prompts))
+    numbered = "\n\n".join(
+        f"[PROMPT {i+1} START]\n{p}\n[PROMPT {i+1} END]"
+        for i, p in enumerate(prompts)
+    )
 
     # Try SDK batch (only if API key available)
     if _is_sdk_available():
@@ -252,19 +264,24 @@ def _batch_via_sdk(numbered_prompts, system, model):
 
 
 def _parse_batch_response(text):
-    """Parse numbered response lines back into a list."""
+    """Parse marked response blocks back into a list."""
     import re
     results = []
+
+    # Try marker-based format first: [PROMPT N] ... [/PROMPT N]
+    blocks = re.findall(r'\[PROMPT\s+\d+\]\s*\n(.*?)\n\s*\[/PROMPT\s+\d+\]', text, re.DOTALL)
+    if blocks:
+        return [b.strip() for b in blocks]
+
+    # Fallback: numbered lines (1: ..., 2: ...)
     for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
-        # Match "1: ...", "1. ...", "10) ..." etc.
         m = re.match(r'^(\d+)\s*[:.)]\s*(.*)', line)
         if m:
             results.append(m.group(2).strip())
             continue
-        # Continuation of previous entry
         if results:
             results[-1] += " " + line
     return results if results else None

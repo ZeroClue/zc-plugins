@@ -68,7 +68,7 @@ def statement_hook(heading, text="", brand=None, **kwargs):
 def checklist(heading, items, icon="checkmark", brand=None, **kwargs):
     item_lines = []
     for i, item in enumerate(items, 1):
-        item_lines.append(f"{i}. {icon} \"{item}\"")
+        item_lines.append(f"  - {icon} \"{item}\"")
     items_text = "\n".join(item_lines)
     return (
         f"Checklist infographic slide. {_canvas_spec(brand)}\n"
@@ -76,7 +76,7 @@ def checklist(heading, items, icon="checkmark", brand=None, **kwargs):
         f"Vertical list of {len(items)} items, each with a {icon} icon left-aligned:\n"
         f"{items_text}\n"
         f"Each item in a card row with 12px padding. {icon} icon at 24px size, "
-        f"text in body font beside it.\n"
+        f"text in body font beside it. Number each item sequentially.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
         f"Even spacing between rows, left-aligned text, clear numbered layout. {MAGIC_SUFFIX}"

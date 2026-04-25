@@ -146,7 +146,9 @@ Use the Agent tool with `model: haiku` to expand the prompt. This keeps the expa
 Agent(
   description="Expand image prompt",
   model="haiku",
-  prompt="""You are an image generation prompt engineer for the Qwen Image model. Expand the user's short prompt into a detailed prompt optimized for Qwen Image's capabilities.
+  prompt="""You are an image generation prompt engineer for the Qwen Image model. Enhance the user's prompt for optimal image generation with Qwen Image.
+
+IMPORTANT: Preserve ALL existing detail from the input. Only ADD specificity where the prompt is vague. Never summarize, condense, or remove existing content.
 
 Qwen Image strengths: exceptional text rendering, complex multi-element layouts, infographic-style compositions, realistic photography.
 
@@ -158,14 +160,14 @@ Rules:
 - Do NOT add any text the user did not explicitly request. Qwen renders text accurately — hallucinated text will appear in the image.
 - Do NOT use negation words. Instead of "no text", just don't mention text. Instead of "no watermark", omit it entirely.
 - You may use weighted attention syntax: (element:1.5) to emphasize, (element:0.8) to de-emphasize.
-- Output ONLY the expanded prompt — no explanations, no markdown, no prefix.
-- Keep the expanded prompt under 500 words.
+- Output ONLY the enhanced prompt — no explanations, no markdown, no prefix.
+- Keep the enhanced prompt under 500 words.
 - Be specific with colors (hex codes), sizes (pixels relative to canvas), and positions (top-left, center, etc.).
 - Always end the prompt with: Ultra HD, 4K, cinematic composition
 
 {brand_section}
 
-Expand this prompt: <USER_PROMPT>"""
+Enhance this prompt: <USER_PROMPT>"""
 )
 ```
 
@@ -332,7 +334,9 @@ Expand carousel slide prompts via the Agent tool **before** running the carousel
 Agent(
   description="Expand carousel prompts",
   model="haiku",
-  prompt="""You are an image generation prompt engineer for the Qwen Image model. Expand each numbered prompt into a detailed prompt optimized for Qwen Image's capabilities.
+  prompt="""You are an image generation prompt engineer for the Qwen Image model. Enhance each prompt for optimal image generation.
+
+IMPORTANT: Preserve ALL existing detail from every input. Only ADD specificity where a prompt is vague. Never summarize, condense, or remove existing content.
 
 Qwen Image strengths: exceptional text rendering, complex multi-element layouts, infographic-style compositions, realistic photography.
 
@@ -341,18 +345,21 @@ Rules per prompt:
 - Photo/illustration prompts: add style, lighting, composition, mood details. Default to realistic photography if unspecified. Apply brand style notes if relevant.
 - Enclose all text content in double quotes with position and font style. Never alter the user's text.
 - Do NOT add extra text the user didn't request. Do NOT use negation words.
-- Keep each expanded prompt under 500 words.
+- Keep each enhanced prompt under 500 words.
 - Be specific with colors (hex codes), sizes, and positions.
-- End each expanded prompt with: Ultra HD, 4K, cinematic composition
+- End each enhanced prompt with: Ultra HD, 4K, cinematic composition
 
-Output format — return each expanded prompt on a separate line, prefixed with its number and a colon:
-1: <expanded prompt 1>
-2: <expanded prompt 2>
-...
+Output format — wrap each expanded prompt in markers:
+[PROMPT 1]
+<enhanced prompt 1>
+[/PROMPT 1]
+[PROMPT 2]
+<enhanced prompt 2>
+[/PROMPT 2]
 
 {brand_section}
 
-Expand these prompts:
+Enhance these prompts:
 <numbered_prompts>"""
 )
 ```
@@ -362,6 +369,22 @@ Then substitute the expanded prompts back into the spec (or pass them as fully-e
 **Fallback:** If invoking the carousel script directly from CLI, `--optimize` is available — the script uses its own batch optimizer.
 
 See `examples/carousel-example.md` for a complete worked example.
+
+## Spec writing tips
+
+These rules help produce cleaner carousels and avoid common pitfalls:
+
+1. **Use `statement-hook` for text-only hooks** — If the hook has no stat number, use `type: statement-hook` instead of `type: stat-hook`. The stat-hook template puts `number:` in large centered font — a long sentence there looks odd.
+
+2. **Use `contrast:` on split slides** — Without it, the model gets no visual treatment instructions. `contrast: before-after` makes one side dimmed/faded and the other sharp/vibrant. Available: `before-after`, `good-bad`, `old-new`, `problem-solution`, `light-dark`.
+
+3. **Keep checklist items concise** — Each item becomes a row in the visual. Long items get truncated or wrapped awkwardly. Aim for under 8 words per item.
+
+4. **Slide headings are labels, not prompts** — The `## Slide N — Heading` text becomes the filename and log label. It's not sent to the image model. Put the visual content in typed directives or the prompt body.
+
+5. **Avoid markdown formatting in directives** — Don't use `**bold**`, `*italic*`, or `` `code` `` in `text:`, `left:`, `right:`, or `items:` values. Qwen will render the markdown syntax literally in the image.
+
+6. **Max 5 slides for carousels** — Slides 2+ use the edit endpoint with slide 1 as a style reference. More slides means more drift from the original style. 3-5 slides is the sweet spot.
 
 ## Additional Resources
 
