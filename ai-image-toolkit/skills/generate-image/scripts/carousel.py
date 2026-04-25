@@ -417,7 +417,7 @@ def main():
     if args.generate_all and len(prompts) > 1:
         from templates import extract_style_prefix
         style_prefix = extract_style_prefix(brand)
-        for i in range(1, len(prompts)):
+        for i in range(0, len(prompts)):
             if style_prefix not in prompts[i]:
                 prompts[i] = f"{style_prefix} {prompts[i]}"
         print(f"  Shared style prefix injected ({len(style_prefix)} chars)", file=sys.stderr)

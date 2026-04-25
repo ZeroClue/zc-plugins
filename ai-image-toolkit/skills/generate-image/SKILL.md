@@ -389,6 +389,12 @@ These rules help produce cleaner carousels and avoid common pitfalls:
 
 6. **Max 5 slides for carousels** — Slides 2+ use the edit endpoint with slide 1 as a style reference. More slides means more drift from the original style. 3-5 slides is the sweet spot.
 
+## Known Qwen Image Limitations
+
+- **".pdf" renders incorrectly** — The model consistently renders ".pdf" as ".pof" or similar. Avoid this text in prompts or use workarounds like "PDF", "pdf document", or spell it out.
+- **Icon color override** — The model may override specified icon colors (e.g., rendering green ✓ instead of red ✗). Weighted attention syntax `(icon:1.5)` is applied but not guaranteed.
+- **Edit endpoint text corruption** — The edit endpoint (2511) re-encodes images through latent space, corrupting text. Use `--generate-all` for text-heavy carousels (see #2).
+
 ## Additional Resources
 
 - **`references/qwen-image-prompt-guide.md`** — Official Qwen Image prompt engineering guide: text rendering rules, optimizer system prompt, edit task templates, layout examples, weighted attention syntax

@@ -68,14 +68,14 @@ def statement_hook(heading, text="", brand=None, **kwargs):
 def checklist(heading, items, icon="checkmark", brand=None, **kwargs):
     item_lines = []
     for i, item in enumerate(items, 1):
-        item_lines.append(f"  - {icon} \"{item}\"")
+        item_lines.append(f"  - ({icon}:1.5) \"{item}\"")
     items_text = "\n".join(item_lines)
     return (
         f"Checklist infographic slide. {_canvas_spec(brand)}\n"
         f"Title: \"{heading}\" in bold heading font, top of canvas.\n"
-        f"Vertical list of {len(items)} items, each with a {icon} icon left-aligned:\n"
+        f"Vertical list of {len(items)} items, each with a ({icon}:1.5) icon left-aligned:\n"
         f"{items_text}\n"
-        f"Each item in a card row with 12px padding. {icon} icon at 24px size, "
+        f"Each item in a card row with 12px padding. ({icon}:1.5) icon at 24px size, "
         f"text in body font beside it. Number each item sequentially.\n"
         f"{_spacing_rules()}\n"
         f"{_brand_style(brand)} "
@@ -164,7 +164,8 @@ def cta(heading, action_text="", url="", brand=None, **kwargs):
     return (
         f"Call-to-action slide. {_canvas_spec(brand)}\n"
         f"Title: \"{heading}\" in bold heading font, top third.\n"
-        f"Centered bold action text: \"{action_text}\" in the middle third, large font.\n"
+        f"Centered bold action text: \"{action_text}\" in the middle third, large font. "
+        f"This text MUST appear on a SINGLE line — do not break or wrap across lines.\n"
         f"URL below: \"{url}\" in monospace font, bottom third.\n"
         f"Optional gradient accent bar above the action text.\n"
         f"{_spacing_rules()}\n"
