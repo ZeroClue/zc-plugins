@@ -77,6 +77,12 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.3.1 (2026-04-25)
+
+- **Qwen-specific prompt rules** — Optimizer system prompts rewritten with official Qwen Image best practices: text in double quotes with position/font, no negation words, no extra text, weighted attention syntax, magic quality suffix ("Ultra HD, 4K, cinematic composition")
+- **Edit-awareness** — Optimizer handles edit instructions differently from generate, preserving original image intent
+- **Prompt reference guide** — `references/qwen-image-prompt-guide.md` compiled from official Qwen sources
+
 ### v0.3.0 (2026-04-25)
 
 - **Prompt optimizer** — `--optimize` flag expands short prompts into detailed image generation specs via the `claude` CLI. Model configurable with `--optimizer-model` (haiku/sonnet/opus, default haiku). Falls back to template-based expansion when CLI unavailable.
