@@ -11,10 +11,13 @@ AI image generation and editing for Claude Code, powered by Qwen Image models on
 - **Text-to-image** — Generate images from text prompts (Qwen Image 2512, 4-step Lightning, ~2s/image, up to 4096x4096)
 - **Image editing** — Edit existing images with text instructions (Qwen Image Edit 2511, single or dual image input)
 - **Multi-image carousels** — Generate visually consistent slide decks from markdown specs (auto-detected in `/generate-image`)
-- **Prompt optimizer** — Expand short prompts into detailed image specs via `claude` CLI (`--optimize`, configurable model)
+- **Smart prompt expansion** — Claude Code expands short prompts into detailed image specs via Agent tool (haiku model). Works for all subscribers without API keys. CLI fallback available (`--optimize`)
 - **Brand config** — Define brand colors, fonts, and style in `.image-brand.json`, auto-injected into every prompt
-- **Slide templates** — Built-in templates for common carousel patterns (`stat-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`)
+- **Slide templates** — Built-in templates for common carousel patterns (`stat-hook`, `statement-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`)
+- **Split contrast modes** — Visual treatment instructions for split slides (`before-after`, `good-bad`, `old-new`, `problem-solution`, `light-dark`)
 - **Edit fallback** — Automatic retry with backoff on edit failures, falls back to generate endpoint
+- **Prompt logging** — Expanded prompts logged to `_prompts.jsonl` for auditing and iteration
+- **Shrink guard** — Rejects optimizer output shorter than 50% of input to prevent silent content loss
 
 ## Prerequisites
 
