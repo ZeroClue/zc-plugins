@@ -85,7 +85,7 @@ The `argument-hint` text may come as a single string. Parse it to determine:
 | `--width` | 1328 | Image width, 256-4096 (generate only) |
 | `--height` | 1328 | Image height, 256-4096 (generate only) |
 | `--seed` | random | Reproducible seed |
-| `--steps` | 4 | 4=fast, 50=full quality (generate), 40=full quality (edit) |
+| `--steps` | 4 | 4=Lightning fast (~2s), 8=balanced (~4-8s, best for text), 50/40=full quality (~15-30s) |
 | `--image` | required | Source image path (edit only) |
 | `--reference-image` | none | Reference image (edit only) |
 | `--negative-prompt` | "" | What to avoid |

@@ -94,7 +94,7 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--seed` | random | Random seed |
-| `--steps` | 4 | Sampling steps (4=Lightning fast, 50=full quality for generate, 40 for edit) |
+| `--steps` | 4 | Sampling steps. See step quality tiers below |
 | `--negative-prompt` | "" | Negative prompt text |
 | `--output-dir` | . | Output directory |
 | `--filename` | auto | Output filename |
@@ -116,6 +116,18 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 |------|---------|-------------|
 | `--image` | required | Source image file path |
 | `--reference-image` | none | Optional reference image for multi-image edits |
+
+## Step quality tiers
+
+The Lightning LoRA trades text rendering quality for speed. Use the appropriate step count for your content type:
+
+| Steps | Mode | Speed | Best for |
+|-------|------|-------|----------|
+| 4 | Lightning (LoRA, CFG=1) | ~2s | Prototyping, visual-only images, quick iterations |
+| 8 | Lightning (LoRA, CFG=1) | ~4-8s | Text-heavy content, carousels, infographics |
+| 50 (generate) / 40 (edit) | Full quality (no LoRA, CFG=4) | ~15-30s | Maximum text accuracy, final production output |
+
+For **text-heavy carousels** (`--generate-all`), recommend `--steps 8` as the default — significantly better text rendering than 4-step with minimal speed cost.
 
 ## Error handling
 

@@ -85,7 +85,7 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--seed` | random | Reproducible random seed |
-| `--steps` | 4 | Sampling steps (4=Lightning fast, 50=full quality generate, 40=full quality edit) |
+| `--steps` | 4 | Sampling steps (4=fast ~2s, 8=balanced ~4-8s, 50/40=full quality ~15-30s) |
 | `--negative-prompt` | "" | Negative prompt text |
 | `--output-dir` | . | Output directory |
 | `--filename` | auto | Output filename |
