@@ -85,7 +85,12 @@ The `argument-hint` text may come as a single string. Parse it to determine:
 | `--width` | 1328 | Image width, 256-4096 (generate only) |
 | `--height` | 1328 | Image height, 256-4096 (generate only) |
 | `--seed` | random | Reproducible seed |
-| `--steps` | 4 | 4=Lightning fast (~2s), 8=balanced (~4-8s, best for text), 50/40=full quality (~15-30s) |
+| `--steps` | 4 | 4=Lightning fast (~2s), 5-8=balanced (~4-8s, best for text), 50/40=full quality (~15-30s) |
+| `--cfg` | auto | Override CFG scale (auto: 1.0 Lightning, 4.0 base). Endpoint v1.8.0+ |
+| `--shift` | 3.1 | ModelSamplingAuraFlow shift. Endpoint v1.8.0+ |
+| `--sampler` | euler | KSampler sampler name. Endpoint v1.8.0+ |
+| `--scheduler` | simple | KSampler scheduler name. Endpoint v1.8.0+ |
+| `--lora` | auto | Override LoRA: `4step`, `8step`, `none`. Endpoint v1.8.0+ |
 | `--image` | required | Source image path (edit only) |
 | `--reference-image` | none | Reference image (edit only) |
 | `--negative-prompt` | "" | What to avoid |

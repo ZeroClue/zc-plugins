@@ -202,6 +202,16 @@ def cmd_generate(args, brand=None):
             "batch_size": args.batch_size,
         }
     }
+    if args.cfg is not None:
+        payload["input"]["cfg"] = args.cfg
+    if args.shift is not None:
+        payload["input"]["shift"] = args.shift
+    if args.sampler:
+        payload["input"]["sampler"] = args.sampler
+    if args.scheduler:
+        payload["input"]["scheduler"] = args.scheduler
+    if args.lora:
+        payload["input"]["lora"] = args.lora
 
     print(f"Generating image: \"{args.prompt}\"")
     if prompt != args.prompt:
@@ -258,6 +268,16 @@ def cmd_edit(args, brand=None):
 
     if args.reference_image:
         payload["input"]["reference_image"] = load_image_base64(args.reference_image)
+    if args.cfg is not None:
+        payload["input"]["cfg"] = args.cfg
+    if args.shift is not None:
+        payload["input"]["shift"] = args.shift
+    if args.sampler:
+        payload["input"]["sampler"] = args.sampler
+    if args.scheduler:
+        payload["input"]["scheduler"] = args.scheduler
+    if args.lora:
+        payload["input"]["lora"] = args.lora
 
     print(f"Editing image: \"{args.prompt}\"")
     if prompt != args.prompt:
@@ -323,6 +343,11 @@ def main():
     gen.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"], help="Model for prompt expansion (default: haiku)")
     gen.add_argument("--max-words", type=int, default=500, help="Max words for optimized prompt (default: 500)")
     gen.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
+    gen.add_argument("--cfg", type=float, default=None, help="Override CFG scale (auto: 1.0 Lightning, 4.0 base)")
+    gen.add_argument("--shift", type=float, default=None, help="ModelSamplingAuraFlow shift (default 3.1)")
+    gen.add_argument("--sampler", default=None, help="KSampler sampler name (default euler)")
+    gen.add_argument("--scheduler", default=None, help="KSampler scheduler name (default simple)")
+    gen.add_argument("--lora", default=None, choices=["4step", "8step", "none"], help="Override LoRA selection")
 
     # Edit subcommand
     edit = subparsers.add_parser("edit", help="Image editing (Qwen Edit 2511)")
@@ -339,6 +364,11 @@ def main():
     edit.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"], help="Model for prompt expansion (default: haiku)")
     edit.add_argument("--max-words", type=int, default=500, help="Max words for optimized prompt (default: 500)")
     edit.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
+    edit.add_argument("--cfg", type=float, default=None, help="Override CFG scale (auto: 1.0 Lightning, 4.0 base)")
+    edit.add_argument("--shift", type=float, default=None, help="ModelSamplingAuraFlow shift (default 3.1)")
+    edit.add_argument("--sampler", default=None, help="KSampler sampler name (default euler)")
+    edit.add_argument("--scheduler", default=None, help="KSampler scheduler name (default simple)")
+    edit.add_argument("--lora", default=None, choices=["4step", "8step", "none"], help="Override LoRA selection")
 
     args = parser.parse_args()
 

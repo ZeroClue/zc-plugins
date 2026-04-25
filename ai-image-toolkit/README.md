@@ -85,7 +85,12 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--seed` | random | Reproducible random seed |
-| `--steps` | 4 | Sampling steps (4=fast ~2s, 8=balanced ~4-8s, 50/40=full quality ~15-30s) |
+| `--steps` | 4 | Sampling steps (4=fast ~2s, 5-8=balanced ~4-8s, 50/40=full quality ~15-30s). Auto-selects LoRA. |
+| `--cfg` | auto | Override CFG scale (auto: 1.0 Lightning, 4.0 base). Endpoint v1.8.0+ |
+| `--shift` | 3.1 | ModelSamplingAuraFlow shift — increase if blurry/dark, decrease for detail. Endpoint v1.8.0+ |
+| `--sampler` | euler | KSampler sampler name (euler, res_multistep, etc). Endpoint v1.8.0+ |
+| `--scheduler` | simple | KSampler scheduler name. Endpoint v1.8.0+ |
+| `--lora` | auto | Override LoRA selection: `4step`, `8step`, `none`. Auto-selected from steps. Endpoint v1.8.0+ |
 | `--negative-prompt` | "" | Negative prompt text |
 | `--output-dir` | . | Output directory |
 | `--filename` | auto | Output filename |
@@ -116,6 +121,11 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 | `--seed` | random | Base seed (each slide gets base + index, or base for all with `--shared-seed`) |
 | `--shared-seed` | off | Use the same seed for all slides — same random state across generate and edit passes |
 | `--steps` | 4 | Override steps from spec |
+| `--cfg` | auto | Override CFG scale. Endpoint v1.8.0+ |
+| `--shift` | 3.1 | ModelSamplingAuraFlow shift. Endpoint v1.8.0+ |
+| `--sampler` | euler | KSampler sampler name. Endpoint v1.8.0+ |
+| `--scheduler` | simple | KSampler scheduler name. Endpoint v1.8.0+ |
+| `--lora` | auto | Override LoRA: `4step`, `8step`, `none`. Endpoint v1.8.0+ |
 | `--sync` | off | Synchronous mode (warm workers only) |
 | `--generate-all` | off | Use generate endpoint for all slides with shared style prefix for consistency |
 | `--edit-retries` | 3 | Retries per slide before fallback |
@@ -144,9 +154,13 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ### v0.7.3 (2026-04-25)
 
-- **`--generate-all` with shared style prefix** — Text-heavy carousels (infographics, checklists, stats) now bypass the edit endpoint entirely, generating all slides via 2512 with a shared style prefix derived from brand config. The edit endpoint corrupts text due to full re-synthesis; this avoids the issue while maintaining visual consistency (see #2).
-- **`--shared-seed`** — Use the same seed for all carousel slides instead of base + index. Works with both normal and `--generate-all` pipelines for consistent random state across the carousel.
-- **`extract_style_prefix()`** — New template function builds a style block from brand config (colors, typography, style notes) that gets prepended to slides 2-N in generate-all mode.
+### v0.8.0 (2026-04-25)
+
+- **Endpoint v1.8.0 parameters** — New flags `--cfg`, `--shift`, `--sampler`, `--scheduler`, `--lora` for fine-tuning ComfyUI workflow parameters. Exposed in generate, edit, and carousel modes.
+- **8-step Lightning auto-detection** — Steps 5-8 now auto-select the 8-step Lightning LoRA for better text quality at ~4-8s generation time.
+- **Step quality tiers** — Documented guidance: 4=prototyping, 8=text-heavy, 50/40=production.
+
+### v0.7.3 (2026-04-25)
 
 ### v0.7.2 (2026-04-25)
 

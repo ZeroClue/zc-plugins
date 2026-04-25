@@ -95,6 +95,11 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 |------|---------|-------------|
 | `--seed` | random | Random seed |
 | `--steps` | 4 | Sampling steps. See step quality tiers below |
+| `--cfg` | auto | Override CFG scale (auto: 1.0 Lightning, 4.0 base). Endpoint v1.8.0+ |
+| `--shift` | 3.1 | ModelSamplingAuraFlow shift — increase if blurry/dark, decrease for more detail. Endpoint v1.8.0+ |
+| `--sampler` | euler | KSampler sampler name (euler, res_multistep, etc). Endpoint v1.8.0+ |
+| `--scheduler` | simple | KSampler scheduler name. Endpoint v1.8.0+ |
+| `--lora` | auto | Override LoRA selection: `4step`, `8step`, `none`. Auto-selected from steps. Endpoint v1.8.0+ |
 | `--negative-prompt` | "" | Negative prompt text |
 | `--output-dir` | . | Output directory |
 | `--filename` | auto | Output filename |
@@ -119,15 +124,15 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 
 ## Step quality tiers
 
-The Lightning LoRA trades text rendering quality for speed. Use the appropriate step count for your content type:
+The Lightning LoRA trades text rendering quality for speed. Endpoints v1.8.0+ auto-select the LoRA based on steps. Use the appropriate step count for your content type:
 
 | Steps | Mode | Speed | Best for |
 |-------|------|-------|----------|
-| 4 | Lightning (LoRA, CFG=1) | ~2s | Prototyping, visual-only images, quick iterations |
-| 8 | Lightning (LoRA, CFG=1) | ~4-8s | Text-heavy content, carousels, infographics |
-| 50 (generate) / 40 (edit) | Full quality (no LoRA, CFG=4) | ~15-30s | Maximum text accuracy, final production output |
+| 4 | 4-step Lightning (LoRA, CFG=1) | ~2s | Prototyping, visual-only images, quick iterations |
+| 5-8 | 8-step Lightning (LoRA, CFG=1) | ~4-8s | Text-heavy content, carousels, infographics |
+| 9+ (generate) / 9+ (edit) | Full quality (no LoRA, CFG=4) | ~15-30s | Maximum text accuracy, final production output |
 
-For **text-heavy carousels** (`--generate-all`), recommend `--steps 8` as the default — significantly better text rendering than 4-step with minimal speed cost.
+For **text-heavy carousels** (`--generate-all`), recommend `--steps 8` as the default — significantly better text rendering than 4-step with minimal speed cost. Override LoRA selection with `--lora 4step`, `--lora 8step`, or `--lora none`.
 
 ## Error handling
 
@@ -282,6 +287,11 @@ Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style
 | `--seed` | random | Base seed (each slide gets base + index, or base for all with `--shared-seed`) |
 | `--shared-seed` | off | Use the same seed for all slides — same random state across generate and edit passes |
 | `--steps` | 4 | Override steps from spec |
+| `--cfg` | auto | Override CFG scale. Endpoint v1.8.0+ |
+| `--shift` | 3.1 | ModelSamplingAuraFlow shift. Endpoint v1.8.0+ |
+| `--sampler` | euler | KSampler sampler name. Endpoint v1.8.0+ |
+| `--scheduler` | simple | KSampler scheduler name. Endpoint v1.8.0+ |
+| `--lora` | auto | Override LoRA: `4step`, `8step`, `none`. Endpoint v1.8.0+ |
 | `--sync` | off | Synchronous mode (warm workers only) |
 | `--generate-all` | off | Use generate endpoint for all slides with shared style prefix for consistency. Recommended for text-heavy carousels — the edit endpoint corrupts text. |
 | `--edit-retries` | 3 | Retries per slide before fallback |

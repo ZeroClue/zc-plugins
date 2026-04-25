@@ -170,7 +170,8 @@ def resolve_dimensions(config):
     return (1328, 1328)
 
 
-def generate_slide_1(prompt, width, height, steps, seed, negative_prompt, sync_mode):
+def generate_slide_1(prompt, width, height, steps, seed, negative_prompt, sync_mode,
+                     cfg=None, shift=None, sampler=None, scheduler=None, lora=None):
     """Generate the first slide via the 2512 text-to-image endpoint."""
     endpoint_id = os.environ.get("RUNPOD_2512_ENDPOINT_ID")
     api_key = os.environ.get("RUNPOD_API_KEY")
@@ -193,6 +194,16 @@ def generate_slide_1(prompt, width, height, steps, seed, negative_prompt, sync_m
             "batch_size": 1,
         }
     }
+    if cfg is not None:
+        payload["input"]["cfg"] = cfg
+    if shift is not None:
+        payload["input"]["shift"] = shift
+    if sampler:
+        payload["input"]["sampler"] = sampler
+    if scheduler:
+        payload["input"]["scheduler"] = scheduler
+    if lora:
+        payload["input"]["lora"] = lora
 
     print(f"  Generating via 2512 endpoint...")
     if sync_mode:
@@ -200,7 +211,8 @@ def generate_slide_1(prompt, width, height, steps, seed, negative_prompt, sync_m
     return call_runpod_async(endpoint_id, api_key, payload)
 
 
-def edit_slide(prompt, source_path, reference_path, steps, seed, negative_prompt, sync_mode):
+def edit_slide(prompt, source_path, reference_path, steps, seed, negative_prompt, sync_mode,
+               cfg=None, shift=None, sampler=None, scheduler=None, lora=None):
     """Edit an image via the 2511 edit endpoint."""
     endpoint_id = os.environ.get("RUNPOD_EDIT_ENDPOINT_ID")
     api_key = os.environ.get("RUNPOD_API_KEY")
@@ -223,6 +235,16 @@ def edit_slide(prompt, source_path, reference_path, steps, seed, negative_prompt
     }
     if reference_path:
         payload["input"]["reference_image"] = load_image_base64(reference_path)
+    if cfg is not None:
+        payload["input"]["cfg"] = cfg
+    if shift is not None:
+        payload["input"]["shift"] = shift
+    if sampler:
+        payload["input"]["sampler"] = sampler
+    if scheduler:
+        payload["input"]["scheduler"] = scheduler
+    if lora:
+        payload["input"]["lora"] = lora
 
     print(f"  Editing via 2511 endpoint...")
     if sync_mode:
@@ -260,12 +282,14 @@ def save_result(result, filename, output_dir):
 
 def _edit_with_fallback(prompt, source_path, reference_path, steps, seed,
                         negative_prompt, sync_mode, max_retries, no_fallback,
-                        width, height, filename, output_dir):
+                        width, height, filename, output_dir,
+                        cfg=None, shift=None, sampler=None, scheduler=None, lora=None):
     """Try edit endpoint with retry + backoff, fall back to generate on failure."""
     for attempt in range(max_retries):
         result = edit_slide(
             prompt, source_path, reference_path, steps, seed,
             negative_prompt, sync_mode,
+            cfg=cfg, shift=shift, sampler=sampler, scheduler=scheduler, lora=lora,
         )
         path = save_result(result, filename, output_dir)
         if path:
@@ -283,6 +307,7 @@ def _edit_with_fallback(prompt, source_path, reference_path, steps, seed,
     result = generate_slide_1(
         prompt, width, height, steps, seed,
         negative_prompt, sync_mode,
+        cfg=cfg, shift=shift, sampler=sampler, scheduler=scheduler, lora=lora,
     )
     path = save_result(result, filename, output_dir)
     if path:
@@ -318,6 +343,11 @@ def main():
                         help="Model for prompt expansion (default: haiku)")
     parser.add_argument("--max-words", type=int, default=500, help="Max words for optimized prompts (default: 500)")
     parser.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
+    parser.add_argument("--cfg", type=float, default=None, help="Override CFG scale (auto: 1.0 Lightning, 4.0 base)")
+    parser.add_argument("--shift", type=float, default=None, help="ModelSamplingAuraFlow shift (default 3.1)")
+    parser.add_argument("--sampler", default=None, help="KSampler sampler name (default euler)")
+    parser.add_argument("--scheduler", default=None, help="KSampler scheduler name (default simple)")
+    parser.add_argument("--lora", default=None, choices=["4step", "8step", "none"], help="Override LoRA selection")
     args = parser.parse_args()
 
     title, config, slides = parse_spec(args.spec)
@@ -437,6 +467,8 @@ def main():
             result = generate_slide_1(
                 prompt, width, height, steps, seed,
                 args.negative_prompt, args.sync_mode,
+                cfg=args.cfg, shift=args.shift, sampler=args.sampler,
+                scheduler=args.scheduler, lora=args.lora,
             )
             path = save_result(result, filename, output_dir)
         elif not assets:
@@ -444,6 +476,8 @@ def main():
                 prompt, slide_1_path, slide_1_path, steps, seed,
                 args.negative_prompt, args.sync_mode, args.edit_retries,
                 args.no_fallback, width, height, filename, output_dir,
+                cfg=args.cfg, shift=args.shift, sampler=args.sampler,
+                scheduler=args.scheduler, lora=args.lora,
             )
         else:
             # Style pass — use slide 1 as reference, prompt describes everything except assets
@@ -452,6 +486,8 @@ def main():
                 style_prompt, slide_1_path, slide_1_path, steps, seed,
                 args.negative_prompt, args.sync_mode, args.edit_retries,
                 args.no_fallback, width, height, filename, output_dir,
+                cfg=args.cfg, shift=args.shift, sampler=args.sampler,
+                scheduler=args.scheduler, lora=args.lora,
             )
 
             # Asset passes — composite each asset onto the result
@@ -465,6 +501,8 @@ def main():
                     asset_prompt, path, asset_path, steps, asset_seed,
                     args.negative_prompt, args.sync_mode, args.edit_retries,
                     args.no_fallback, width, height, temp_filename, output_dir,
+                    cfg=args.cfg, shift=args.shift, sampler=args.sampler,
+                    scheduler=args.scheduler, lora=args.lora,
                 )
                 if new_path:
                     # Remove intermediate pass file, keep final

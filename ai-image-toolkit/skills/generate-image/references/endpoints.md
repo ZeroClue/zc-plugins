@@ -18,14 +18,24 @@ POST https://api.runpod.ai/v2/{RUNPOD_2512_ENDPOINT_ID}/runsync
     "steps": 4,
     "seed": null,
     "negative_prompt": "",
-    "batch_size": 1
+    "batch_size": 1,
+    "cfg": null,
+    "shift": null,
+    "sampler": null,
+    "scheduler": null,
+    "lora": null
   }
 }
 ```
 
 **Width/height:** 256-4096 per dimension. Default 1328x1328.
-**Steps:** 4 = Lightning mode (LoRA on, CFG=1, ~2s). 50 = full quality (CFG=4, ~15-30s). Values in between are not tested.
+**Steps:** 4 = 4-step Lightning (LoRA, CFG=1, ~2s). 5-8 = 8-step Lightning (LoRA, CFG=1, ~4-8s). 9+ = full quality (no LoRA, CFG=4, ~15-30s). Auto-selects LoRA from step count.
 **Seed:** Omit for random. Include for reproducibility.
+**cfg:** Override CFG scale. Auto: 1.0 for Lightning, 4.0 for base.
+**shift:** ModelSamplingAuraFlow shift. Default 3.1. Increase if blurry/dark, decrease for more detail.
+**sampler:** KSampler sampler name. Default `euler`. Alternatives: `res_multistep`, etc.
+**scheduler:** KSampler scheduler name. Default `simple`.
+**lora:** Override LoRA selection. `4step`, `8step`, or `none`. Auto-selected from steps when omitted.
 
 ### Image Editing (Qwen Image Edit 2511)
 
@@ -42,14 +52,20 @@ POST https://api.runpod.ai/v2/{RUNPOD_EDIT_ENDPOINT_ID}/runsync
     "reference_image": "base64-encoded reference image (optional)",
     "steps": 4,
     "seed": null,
-    "negative_prompt": ""
+    "negative_prompt": "",
+    "cfg": null,
+    "shift": null,
+    "sampler": null,
+    "scheduler": null,
+    "lora": null
   }
 }
 ```
 
 **No width/height** — output dimensions inherit from source image.
-**Steps:** 4 = Lightning (LoRA on, CFG=1, ~2-5s). 40 = full quality (CFG=4, ~15-30s).
+**Steps:** 4 = 4-step Lightning (LoRA, CFG=1, ~2-5s). 5-8 = 8-step Lightning (LoRA, CFG=1). 40 = full quality (no LoRA, CFG=4, ~15-30s). Auto-selects LoRA from step count.
 **Single vs dual image:** If no `reference_image` provided, source image is reused (single-image edit).
+**cfg, shift, sampler, scheduler, lora:** Same as generate endpoint.
 
 ## Response Format
 
