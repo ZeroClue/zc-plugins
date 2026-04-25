@@ -78,6 +78,67 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 | Qwen Image 2512 | Text-to-image | 4 (Lightning) | 50 |
 | Qwen Image Edit 2511 | Image editing | 4 (Lightning) | 40 |
 
+## Parameters
+
+### Generate & Edit (common)
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--seed` | random | Reproducible random seed |
+| `--steps` | 4 | Sampling steps (4=Lightning fast, 50=full quality generate, 40=full quality edit) |
+| `--negative-prompt` | "" | Negative prompt text |
+| `--output-dir` | . | Output directory |
+| `--filename` | auto | Output filename |
+| `--sync` | off | Synchronous mode (faster when worker is warm) |
+| `--brand-config` | auto | Path to `.image-brand.json` (auto-searches CWD if not specified) |
+
+### Generate-only
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--aspect-ratio` | 1:1 | Preset ratio (1:1, 16:9, 9:16, 4:3, 3:4, 3:2, 2:3). Overrides `--width`/`--height` |
+| `--width` | 1328 | Image width (256–4096) |
+| `--height` | 1328 | Image height (256–4096) |
+| `--batch-size` | 1 | Number of images |
+
+### Edit-only
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--image` | required | Source image file path |
+| `--reference-image` | none | Optional reference image for multi-image edits |
+
+### Carousel
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--output-dir` | auto | Output directory (default: `./<title-slug>`) |
+| `--seed` | random | Base seed (each slide gets base + index) |
+| `--steps` | 4 | Override steps from spec |
+| `--sync` | off | Synchronous mode (warm workers only) |
+| `--generate-all` | off | Use generate endpoint for all slides (no edit consistency) |
+| `--edit-retries` | 3 | Retries per slide before fallback |
+| `--no-fallback` | off | Disable automatic edit→generate fallback |
+| `--brand-config` | auto | Path to `.image-brand.json` |
+
+### Carousel spec directives
+
+| Directive | Templates | Description |
+|-----------|-----------|-------------|
+| `type:` | all | Template name (stat-hook, statement-hook, checklist, comparison, flow, split, cta) |
+| `number:` | stat-hook | Large centered stat (e.g. "53%") |
+| `text:` | stat-hook, statement-hook | Supporting text below the stat/heading |
+| `items:` | checklist | Bulleted list (one per line with `- ` prefix) |
+| `icon:` | checklist | Icon for each item (e.g. "✓", "✗") |
+| `left:` / `right:` | split | Content for each half |
+| `contrast:` | split | Visual treatment mode (before-after, good-bad, old-new, problem-solution, light-dark) |
+| `steps:` | flow | Arrow-separated steps ("Audit → Prioritize → Implement") |
+| `columns:` | comparison | Pipe-separated columns ("Column A | Column B") |
+| `action_text:` | cta | Bold action text |
+| `url:` | cta | URL to display |
+| `accent:` | any | Override accent color for this slide |
+| `asset:` | any | Path to image asset to composite onto the slide |
+
 ## What's New
 
 ### v0.7.0 (2026-04-25)
