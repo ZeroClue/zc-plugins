@@ -1,6 +1,6 @@
 {
   "name": "ai-image-toolkit",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "AI image generation and editing via RunPod serverless Qwen Image endpoints. Text-to-image (Qwen 2512) and image editing (Qwen Edit 2511).",
   "author": {
     "name": "ZeroClue",

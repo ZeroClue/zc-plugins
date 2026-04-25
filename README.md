@@ -24,6 +24,7 @@ Open community marketplace for Claude Code plugins.
 
 ### ai-image-toolkit
 
+- **0.6.1** (2025-04-25): Optimizer shrink guard — rejects expanded prompts shorter than 50% of input
 - **0.6.0** (2025-04-25): Command file uses Agent tool for expansion, split template contrast modes, prompt logging (`_prompts.jsonl`), MAGIC_SUFFIX fix in templates
 - **0.5.0** (2025-04-25): Native prompt expansion via Agent tool (haiku) for all modes, consistent Qwen rules + brand injection, `--optimize` demoted to CLI fallback
 - **0.4.0** (2025-04-25): Anthropic SDK fast path, batch optimization, configurable word cap, richer templates, statement-hook template, broader response parsing

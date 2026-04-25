@@ -77,6 +77,10 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.6.1 (2026-04-25)
+
+- **Optimizer shrink guard** — If the optimizer produces a prompt shorter than 50% of the input, the original prompt is used instead. Prevents silent content loss when the model collapses structured content (e.g. checklists) into a one-liner.
+
 ### v0.6.0 (2026-04-25)
 
 - **Command file prompt expansion** — `/generate-image` slash command now uses Agent tool for prompt expansion (was only in SKILL.md natural language path). Both activation paths are now consistent.
