@@ -34,7 +34,7 @@ If the user's input contains `## Slide` (a markdown carousel spec):
 3. Extract any flags the user appended after the spec (e.g. `--seed 42`, `--output-dir ./output`, `--steps 4`, `--sync`)
 4. Run:
    ```bash
-   python3 skills/generate-image/scripts/carousel.py /tmp/carousel-spec-{timestamp}.md [--output-dir <path>] [--seed N] [--steps N] [--sync]
+   python3 skills/generate-image/scripts/carousel.py /tmp/carousel-spec-{timestamp}.md [--output-dir <path>] [--seed N] [--steps N] [--sync] [--shared-seed] [--generate-all]
    ```
 5. Report the output directory, number of slides generated, and base seed
 
@@ -93,6 +93,8 @@ The `argument-hint` text may come as a single string. Parse it to determine:
 | `--filename` | auto | Output filename |
 | `--batch-size` | 1 | Number of images (generate only) |
 | `--sync` | off | Use synchronous mode (faster when worker is warm) |
+| `--shared-seed` | off | Carousel: same seed for all slides (carousel only) |
+| `--generate-all` | off | Carousel: generate all slides via 2512, skip edit endpoint (carousel only) |
 
 ## After running
 

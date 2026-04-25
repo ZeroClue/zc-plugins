@@ -24,7 +24,7 @@ Open community marketplace for Claude Code plugins.
 
 ### ai-image-toolkit
 
-- **0.7.3** (2025-04-25): `--generate-all` with shared style prefix for text-heavy carousels (#2), bypasses edit endpoint text corruption
+- **0.7.3** (2025-04-25): `--generate-all` with shared style prefix for text-heavy carousels (#2), `--shared-seed` for consistent random state across all slides
 - **0.7.2** (2025-04-25): Fix heading directive ignored in carousel specs, skip horizontal rules and blockquotes (#1)
 - **0.7.1** (2025-04-25): Parameters documentation — full flag reference + carousel spec directives
 - **0.7.0** (2025-04-25): Root cause fix for optimizer shrinking prompts (checklist collision + system prompt framing + batch delimiters), spec writing tips

@@ -267,7 +267,8 @@ Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--output-dir` | auto | Output directory (default: `./<title-slug>`) |
-| `--seed` | random | Base seed (each slide gets base + index) |
+| `--seed` | random | Base seed (each slide gets base + index, or base for all with `--shared-seed`) |
+| `--shared-seed` | off | Use the same seed for all slides — same random state across generate and edit passes |
 | `--steps` | 4 | Override steps from spec |
 | `--sync` | off | Synchronous mode (warm workers only) |
 | `--generate-all` | off | Use generate endpoint for all slides with shared style prefix for consistency. Recommended for text-heavy carousels — the edit endpoint corrupts text. |

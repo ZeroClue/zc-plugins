@@ -113,10 +113,11 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--output-dir` | auto | Output directory (default: `./<title-slug>`) |
-| `--seed` | random | Base seed (each slide gets base + index) |
+| `--seed` | random | Base seed (each slide gets base + index, or base for all with `--shared-seed`) |
+| `--shared-seed` | off | Use the same seed for all slides — same random state across generate and edit passes |
 | `--steps` | 4 | Override steps from spec |
 | `--sync` | off | Synchronous mode (warm workers only) |
-| `--generate-all` | off | Use generate endpoint for all slides (no edit consistency) |
+| `--generate-all` | off | Use generate endpoint for all slides with shared style prefix for consistency |
 | `--edit-retries` | 3 | Retries per slide before fallback |
 | `--no-fallback` | off | Disable automatic edit→generate fallback |
 | `--brand-config` | auto | Path to `.image-brand.json` |
@@ -144,6 +145,7 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 ### v0.7.3 (2026-04-25)
 
 - **`--generate-all` with shared style prefix** — Text-heavy carousels (infographics, checklists, stats) now bypass the edit endpoint entirely, generating all slides via 2512 with a shared style prefix derived from brand config. The edit endpoint corrupts text due to full re-synthesis; this avoids the issue while maintaining visual consistency (see #2).
+- **`--shared-seed`** — Use the same seed for all carousel slides instead of base + index. Works with both normal and `--generate-all` pipelines for consistent random state across the carousel.
 - **`extract_style_prefix()`** — New template function builds a style block from brand config (colors, typography, style notes) that gets prepended to slides 2-N in generate-all mode.
 
 ### v0.7.2 (2026-04-25)

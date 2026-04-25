@@ -301,7 +301,9 @@ def main():
     parser = argparse.ArgumentParser(description="Generate multi-slide carousels with visual consistency")
     parser.add_argument("spec", help="Path to carousel markdown spec file")
     parser.add_argument("--output-dir", default=None, help="Output directory (default: ./<title-slug>)")
-    parser.add_argument("--seed", type=int, default=None, help="Base seed (each slide gets base + index)")
+    parser.add_argument("--seed", type=int, default=None, help="Base seed (each slide gets base + index, or base for all with --shared-seed)")
+    parser.add_argument("--shared-seed", dest="shared_seed", action="store_true",
+                        help="Use the same seed for all slides instead of base + index")
     parser.add_argument("--steps", type=int, default=None, help="Override steps from spec")
     parser.add_argument("--negative-prompt", default="", help="Negative prompt for all slides")
     parser.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
@@ -422,7 +424,7 @@ def main():
 
     for i, slide in enumerate(slides):
         slide_num = i + 1
-        seed = base_seed + i
+        seed = base_seed if args.shared_seed else base_seed + i
         heading = slide["heading"]
         prompt = prompts[i]
         assets = slide["assets"]
