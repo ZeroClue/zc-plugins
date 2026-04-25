@@ -24,6 +24,7 @@ Open community marketplace for Claude Code plugins.
 
 ### ai-image-toolkit
 
+- **0.5.0** (2025-04-25): Native prompt expansion via Agent tool (haiku) for all modes, consistent Qwen rules + brand injection, `--optimize` demoted to CLI fallback
 - **0.4.0** (2025-04-25): Anthropic SDK fast path, batch optimization, configurable word cap, richer templates, statement-hook template, broader response parsing
 - **0.3.1** (2025-04-25): Qwen-specific prompt rules, edit-aware optimization, prompt reference guide
 - **0.3.0** (2025-04-25): Prompt optimizer (`--optimize`), brand config (`.image-brand.json`), slide type templates, edit retry with fallback, `--generate-all` flag, debug logging

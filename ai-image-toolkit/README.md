@@ -77,6 +77,11 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.5.0 (2026-04-25)
+
+- **Native prompt expansion** — Claude Code handles prompt expansion via Agent tool (model: haiku) instead of Python subprocess. No SDK dependency, no CLI subprocess — works for all subscribers. `--optimize` remains as CLI fallback.
+- **Consistent across all modes** — Generate, edit, and carousel all use the same Agent-based expansion with full Qwen Image rules, brand config injection, and batch support for carousels.
+
 ### v0.4.0 (2026-04-25)
 
 - **Anthropic SDK primary path** — Optimizer uses direct API call when `ANTHROPIC_API_KEY` is set (fast, no subprocess). Falls back to `claude` CLI for subscribers without API keys.

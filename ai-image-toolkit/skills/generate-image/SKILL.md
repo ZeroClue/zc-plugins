@@ -99,8 +99,6 @@ python3 skills/generate-image/scripts/generate.py edit "<prompt>" --image <path>
 | `--output-dir` | . | Output directory |
 | `--filename` | auto | Output filename |
 | `--sync` | off | Use synchronous mode (faster when worker is warm) |
-| `--optimize` | off | Expand prompt via LLM for more detailed image specs |
-| `--optimizer-model` | haiku | Model for prompt expansion: haiku, sonnet, opus |
 | `--brand-config` | auto | Path to `.image-brand.json` (auto-searches CWD if not specified) |
 
 ### Generate-only flags
@@ -138,33 +136,71 @@ If the script fails, check the error message:
 
 ## Prompt optimization
 
-When the user provides a short or vague prompt and wants better results, use `--optimize`. The optimizer expands the prompt into a detailed image generation spec with positioning, colors, fonts, and layout details.
+When the user provides a short or vague prompt, or asks for "optimized", "detailed", or "high quality" output, expand the prompt into a detailed image generation spec **before calling the script**. Do NOT pass `--optimize` to generate.py or carousel.py — handle the expansion yourself.
 
-**How it works:**
-- Calls the `claude` CLI (uses your existing auth session) to expand the prompt
-- Model is configurable via `--optimizer-model` (default: haiku for speed)
-- If a brand config file exists, brand defaults are injected automatically
-- Falls back to template-based expansion if `claude` CLI isn't available
+**How to expand prompts:**
 
-**When to suggest it:**
+Use the Agent tool with `model: haiku` to expand the prompt. This keeps the expansion cost minimal.
+
+```
+Agent(
+  description="Expand image prompt",
+  model="haiku",
+  prompt="""You are an image generation prompt engineer for the Qwen Image model. Expand the user's short prompt into a detailed prompt optimized for Qwen Image's capabilities.
+
+Qwen Image strengths: exceptional text rendering, complex multi-element layouts, infographic-style compositions, realistic photography.
+
+Rules:
+- Text/layout prompts (cards, infographics, stats, UI): expand with exact spatial positioning, font family/weight/size, hex colors for every element, element dimensions, spacing rules, background treatment. Use brand colors and fonts unless the prompt specifies otherwise.
+- Photo/illustration prompts: add style, lighting, composition, mood details. If no style specified, default to realistic photography. Apply brand style notes if relevant.
+- For edit instructions: keep descriptions direct and specific. Preserve the original image's core intention, only enhance clarity and visual feasibility.
+- Enclose all text content in double quotes. Specify position and font style for each text element. Never alter or translate the user's text.
+- Do NOT add any text the user did not explicitly request. Qwen renders text accurately — hallucinated text will appear in the image.
+- Do NOT use negation words. Instead of "no text", just don't mention text. Instead of "no watermark", omit it entirely.
+- You may use weighted attention syntax: (element:1.5) to emphasize, (element:0.8) to de-emphasize.
+- Output ONLY the expanded prompt — no explanations, no markdown, no prefix.
+- Keep the expanded prompt under 500 words.
+- Be specific with colors (hex codes), sizes (pixels relative to canvas), and positions (top-left, center, etc.).
+- Always end the prompt with: Ultra HD, 4K, cinematic composition
+
+{brand_section}
+
+Expand this prompt: <USER_PROMPT>"""
+)
+```
+
+**Brand config injection:**
+
+If a `.image-brand.json` file exists (see Brand config section below), read it and inject brand defaults into the Agent prompt. Replace `{brand_section}` with:
+
+```
+Brand config (apply these defaults):
+- background: #050506
+- accent: #32CD32
+- text_primary: #FFFFFF
+... etc from the file
+```
+
+If no brand config file exists, remove the `{brand_section}` line entirely.
+
+The user can override the auto-discovered file by specifying a path: "use brand config /path/to/custom-brand.json" — in that case, read that file instead.
+
+**When to expand:**
 - User gives a short prompt (<20 words) for a complex layout
 - User describes an infographic, card, or text-heavy image
+- User explicitly asks for "optimized" or "detailed" output
 - User wants consistent brand styling across multiple images
+- Carousel slides with typed templates (type: checklist, stat-hook, etc.)
 
-```bash
-# Short prompt → detailed spec
-python3 skills/generate-image/scripts/generate.py generate "stat 53%, heading 'conversion rate'" --optimize
+**When NOT to expand:**
+- User provides a fully detailed prompt (300+ words with positioning, colors, fonts)
+- User explicitly says "use my prompt as-is"
 
-# With brand config for consistent styling
-python3 skills/generate-image/scripts/generate.py generate "a dark infographic about SEO" --optimize --brand-config .image-brand.json
-
-# Use a stronger model for complex expansions
-python3 skills/generate-image/scripts/generate.py generate "complex dashboard layout" --optimize --optimizer-model sonnet
-```
+**Fallback:** If invoking the script directly outside Claude Code (e.g., CLI), use `--optimize` — the script has its own SDK/CLI/template optimizer.
 
 ## Brand config
 
-Create a `.image-brand.json` file in your project root or CWD to define brand defaults. The optimizer injects these into every prompt automatically.
+Create a `.image-brand.json` file in your project root or CWD to define brand defaults. Read this file and inject its values into every optimized prompt.
 
 ```json
 {
@@ -180,7 +216,7 @@ Create a `.image-brand.json` file in your project root or CWD to define brand de
 }
 ```
 
-The file is auto-discovered from CWD or the plugin directory. Use `--brand-config <path>` to specify a custom location.
+Look for `.image-brand.json` in CWD, project root, or the plugin directory. When found, include all key-value pairs in the brand_section of the prompt expansion request. The user can override auto-discovery by specifying a path with `--brand-config /path/to/file.json`.
 
 ## After generation
 
@@ -232,8 +268,6 @@ Slide 1 is generated via text-to-image, subsequent slides use slide 1 as a style
 | `--generate-all` | off | Use generate endpoint for all slides (no edit consistency) |
 | `--edit-retries` | 3 | Retries per slide before fallback |
 | `--no-fallback` | off | Disable automatic edit→generate fallback |
-| `--optimize` | off | Expand prompts via LLM |
-| `--optimizer-model` | haiku | Model for prompt expansion |
 | `--brand-config` | auto | Path to `.image-brand.json` |
 
 **Spec format (full prompts):**
@@ -285,6 +319,43 @@ url: example.com/audit
 ```
 
 **Built-in templates:** `stat-hook`, `checklist`, `comparison`, `flow`, `split`, `cta`. Templates auto-expand into full prompts with brand config colors, fonts, and layout.
+
+**Carousel prompt expansion:**
+
+Expand carousel slide prompts via the Agent tool **before** running the carousel script, using a single batch call:
+
+```
+Agent(
+  description="Expand carousel prompts",
+  model="haiku",
+  prompt="""You are an image generation prompt engineer for the Qwen Image model. Expand each numbered prompt into a detailed prompt optimized for Qwen Image's capabilities.
+
+Qwen Image strengths: exceptional text rendering, complex multi-element layouts, infographic-style compositions, realistic photography.
+
+Rules per prompt:
+- Text/layout prompts: expand with exact spatial positioning, font family/weight/size, hex colors for every element, element dimensions, spacing rules, background treatment. Use brand colors and fonts unless the prompt specifies otherwise.
+- Photo/illustration prompts: add style, lighting, composition, mood details. Default to realistic photography if unspecified. Apply brand style notes if relevant.
+- Enclose all text content in double quotes with position and font style. Never alter the user's text.
+- Do NOT add extra text the user didn't request. Do NOT use negation words.
+- Keep each expanded prompt under 500 words.
+- Be specific with colors (hex codes), sizes, and positions.
+- End each expanded prompt with: Ultra HD, 4K, cinematic composition
+
+Output format — return each expanded prompt on a separate line, prefixed with its number and a colon:
+1: <expanded prompt 1>
+2: <expanded prompt 2>
+...
+
+{brand_section}
+
+Expand these prompts:
+<numbered_prompts>"""
+)
+```
+
+Then substitute the expanded prompts back into the spec (or pass them as fully-expanded prompts in the spec file) before running the carousel script. Do NOT pass `--optimize` to carousel.py.
+
+**Fallback:** If invoking the carousel script directly from CLI, `--optimize` is available — the script uses its own batch optimizer.
 
 See `examples/carousel-example.md` for a complete worked example.
 
