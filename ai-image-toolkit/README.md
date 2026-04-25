@@ -77,6 +77,15 @@ Once installed, Claude Code automatically activates the skill when you ask to ge
 
 ## What's New
 
+### v0.4.0 (2026-04-25)
+
+- **Anthropic SDK primary path** — Optimizer uses direct API call when `ANTHROPIC_API_KEY` is set (fast, no subprocess). Falls back to `claude` CLI for subscribers without API keys.
+- **Batch optimization** — Carousel prompts optimized in a single API call instead of one per slide
+- **Configurable word cap** — `--max-words` flag (default 500, was 200). Text/layout prompts now have room for full spatial descriptions.
+- **Richer templates** — All templates now include canvas size, spacing rules, gradient bars, font specs, and positioning. Output ~80-100 words before optimization.
+- **statement-hook template** — New template type for text-only hooks without a stat number
+- **Broader response parsing** — `extract_images()` now checks `image`, `data`, and `url` keys in addition to `images`
+
 ### v0.3.1 (2026-04-25)
 
 - **Qwen-specific prompt rules** — Optimizer system prompts rewritten with official Qwen Image best practices: text in double quotes with position/font, no negation words, no extra text, weighted attention syntax, magic quality suffix ("Ultra HD, 4K, cinematic composition")

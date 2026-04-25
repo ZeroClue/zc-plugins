@@ -170,7 +170,7 @@ def cmd_generate(args, brand=None):
     if args.optimize:
         sys.path.insert(0, str(Path(__file__).parent))
         from optimize import optimize_prompt
-        prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model)
+        prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model, max_words=args.max_words)
 
     payload = {
         "input": {
@@ -224,7 +224,7 @@ def cmd_edit(args, brand=None):
     if args.optimize:
         sys.path.insert(0, str(Path(__file__).parent))
         from optimize import optimize_prompt
-        prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model)
+        prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model, max_words=args.max_words)
 
     payload = {
         "input": {
@@ -266,8 +266,15 @@ def extract_images(result):
         sys.exit(1)
 
     images = []
-    if isinstance(output, dict) and "images" in output:
-        images = output["images"]
+    if isinstance(output, dict):
+        if "images" in output:
+            images = output["images"]
+        elif "image" in output:
+            images = [output["image"]] if isinstance(output["image"], dict) else output["image"] if isinstance(output["image"], list) else [{"data": output["image"]}]
+        elif "data" in output and isinstance(output["data"], str) and len(output["data"]) > 100:
+            images = [{"data": output["data"]}]
+        elif "url" in output and isinstance(output["url"], str):
+            images = [{"url": output["url"]}]
     elif isinstance(output, list):
         images = output
     return images, output
@@ -294,6 +301,7 @@ def main():
     gen.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
     gen.add_argument("--optimize", action="store_true", help="Expand prompt via LLM for better results")
     gen.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"], help="Model for prompt expansion (default: haiku)")
+    gen.add_argument("--max-words", type=int, default=500, help="Max words for optimized prompt (default: 500)")
     gen.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
 
     # Edit subcommand
@@ -309,6 +317,7 @@ def main():
     edit.add_argument("--sync", dest="sync_mode", action="store_true", help="Use synchronous mode (faster when worker is warm)")
     edit.add_argument("--optimize", action="store_true", help="Expand prompt via LLM for better results")
     edit.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"], help="Model for prompt expansion (default: haiku)")
+    edit.add_argument("--max-words", type=int, default=500, help="Max words for optimized prompt (default: 500)")
     edit.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
 
     args = parser.parse_args()

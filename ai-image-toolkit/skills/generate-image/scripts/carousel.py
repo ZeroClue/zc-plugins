@@ -302,6 +302,7 @@ def main():
                         help="Expand prompts via LLM for better results")
     parser.add_argument("--optimizer-model", default="haiku", choices=["haiku", "sonnet", "opus"],
                         help="Model for prompt expansion (default: haiku)")
+    parser.add_argument("--max-words", type=int, default=500, help="Max words for optimized prompts (default: 500)")
     parser.add_argument("--brand-config", default=None, help="Path to .image-brand.json")
     args = parser.parse_args()
 
@@ -354,29 +355,44 @@ def main():
 
     saved_paths = []
     slide_1_path = None
+    prompts = []
+
+    # Pass 1: expand templates
+    for slide in slides:
+        p = slide["prompt"]
+        if slide.get("type"):
+            p = expand_template(slide, brand=brand)
+            if not p:
+                print(f"  WARNING: empty prompt for typed slide", file=sys.stderr)
+        prompts.append(p)
+
+    # Pass 2: batch optimize (single API call for all slides)
+    if args.optimize and any(prompts):
+        from optimize import batch_optimize
+        optimized = batch_optimize(
+            prompts, brand=brand, model=args.optimizer_model,
+            max_words=args.max_words,
+        )
+        if len(optimized) == len(prompts):
+            prompts = optimized
+        else:
+            # Batch returned wrong count, fall back to individual
+            prompts = [
+                optimize_prompt(p, brand=brand, model=args.optimizer_model,
+                                max_words=args.max_words) if p else p
+                for p in prompts
+            ]
 
     for i, slide in enumerate(slides):
         slide_num = i + 1
         seed = base_seed + i
         heading = slide["heading"]
-        prompt = slide["prompt"]
+        prompt = prompts[i]
         assets = slide["assets"]
         filename = f"slide_{slide_num:02d}_{make_slug(heading)}.png"
 
         print(f"Slide {slide_num}: {heading}")
-        print(f"  Seed: {seed}, Assets: {len(assets)}")
-
-        # Expand typed slides via templates
-        if slide.get("type"):
-            prompt = expand_template(slide, brand=brand)
-            if not prompt:
-                print(f"  WARNING: empty prompt for typed slide {slide_num}", file=sys.stderr)
-            else:
-                print(f"  Template: {slide['type']} → {len(prompt)} char prompt")
-
-        # Optimize prompt if requested
-        if args.optimize and prompt:
-            prompt = optimize_prompt(prompt, brand=brand, model=args.optimizer_model)
+        print(f"  Seed: {seed}, Assets: {len(assets)}, Prompt: {len(prompt)} chars")
 
         if slide_num == 1 or args.generate_all:
             result = generate_slide_1(
