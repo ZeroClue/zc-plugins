@@ -73,6 +73,7 @@ Use `gh issue` CLI. Reference issue numbers in fix commits.
 ## Gotchas
 
 - Edit endpoint has no width/height — output inherits source image dimensions
+- Step quality tiers: 4=Lightning fast (prototyping), 8=balanced (text-heavy), 50/40=full quality (production). Auto-selects LoRA from steps via endpoint v1.8.0.
 - Marketplace version bumps must update both `plugin.json` and `marketplace.json`
 - `.image-brand.json` auto-discovery order: `--brand-config` path > CWD > project root > plugin root
 - New carousel spec directives must be added to `parse_spec()` handler in carousel.py — unhandled directives silently pollute the prompt
@@ -97,3 +98,11 @@ Three-tier fallback: SDK (ANTHROPIC_API_KEY) → CLI (`claude` binary) → templ
 Templates produce rich prompts — optimizer must "preserve ALL detail, never summarize."
 Checklist items use `- ` not `N. ` to avoid collision with batch numbering.
 Batch input uses `[PROMPT N]` delimiters, not plain numbered lines.
+
+## Endpoint Repos
+
+Two public RunPod endpoint repos with their own ComfyUI workflows and handler.py:
+- `ZeroClue/qwen-img-2512` — text-to-image (currently v1.8.0)
+- `ZeroClue/qwen-img-edit-2511` — image editing (currently v1.8.0)
+Read files without cloning: `gh api repos/ZeroClue/qwen-img-2512/contents/handler.py --jq '.content' | base64 -d`
+Workflow parameters (cfg, shift, sampler, lora) are set in handler.py `build_workflow()` — the plugin just passes them through.
